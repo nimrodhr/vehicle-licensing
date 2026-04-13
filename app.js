@@ -356,19 +356,15 @@ function renderDashboard() {
         return true;
     });
 
-    // Summary cards - count individual licenses (date fields), not vehicles
+    // Summary cards - count vehicles by worst status
     const uniqueCustomers = new Set(data.map(r => r.customerName)).size;
     let expired = 0, critical = 0, warning = 0, valid = 0;
     data.forEach(r => {
-        DATE_FIELDS.forEach(field => {
-            const val = r[field];
-            if (!val) return;
-            const s = getDateStatus(val);
-            if (s === 'expired') expired++;
-            else if (s === 'critical') critical++;
-            else if (s === 'warning') warning++;
-            else if (s === 'valid') valid++;
-        });
+        const worst = getRecordWorstStatus(r);
+        if (worst === 'expired') expired++;
+        else if (worst === 'critical') critical++;
+        else if (worst === 'warning') warning++;
+        else if (worst === 'valid') valid++;
     });
 
     // Count open deficiencies
@@ -401,19 +397,19 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-red-500 cursor-pointer" onclick="document.getElementById('dash-status').value='expired';renderDashboard()">
             <div class="text-3xl font-bold text-red-600">${expired}</div>
-            <div class="text-sm text-gray-600">רישיונות פגי תוקף</div>
+            <div class="text-sm text-gray-600">רכבים עם תוקף פג</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='critical';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${critical}</div>
-            <div class="text-sm text-gray-600">רישיונות פוקעים ביומיים הקרובים</div>
+            <div class="text-sm text-gray-600">רכבים פוקעים ביומיים</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-yellow-500 cursor-pointer" onclick="document.getElementById('dash-status').value='warning';renderDashboard()">
             <div class="text-3xl font-bold text-yellow-600">${warning}</div>
-            <div class="text-sm text-gray-600">רישיונות פוקעים ב-30 יום</div>
+            <div class="text-sm text-gray-600">רכבים פוקעים ב-30 יום</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
-            <div class="text-sm text-gray-600">רישיונות תקינים</div>
+            <div class="text-sm text-gray-600">רכבים תקינים</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-purple-500">
             <div class="text-3xl font-bold text-purple-600">${openDefs}</div>
