@@ -393,7 +393,7 @@ function renderDashboard() {
 
         const escapedName = name.replace(/'/g, "\\'");
         html += `<tr class="cursor-pointer" onclick="toggleCustomerExpand(this, '${escapedName}')">
-            <td class="text-center">&#9654;</td>
+            <td class="text-center">&#9664;</td>
             <td class="font-medium">${name}</td>
             <td>${info.location}</td>
             <td>${info.vehicles.length}</td>
@@ -411,7 +411,7 @@ function toggleCustomerExpand(row, customerName) {
     const existing = row.nextElementSibling;
     if (existing && existing.classList.contains('vehicle-detail-row')) {
         existing.remove();
-        row.querySelector('td:first-child').innerHTML = '&#9654;';
+        row.querySelector('td:first-child').innerHTML = '&#9664;';
         row.classList.remove('expanded-row');
         return;
     }
@@ -419,7 +419,7 @@ function toggleCustomerExpand(row, customerName) {
     document.querySelectorAll('.vehicle-detail-row').forEach(r => r.remove());
     document.querySelectorAll('.expanded-row').forEach(r => {
         r.classList.remove('expanded-row');
-        r.querySelector('td:first-child').innerHTML = '&#9654;';
+        r.querySelector('td:first-child').innerHTML = '&#9664;';
     });
 
     row.classList.add('expanded-row');
