@@ -17,7 +17,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "1",
@@ -37,7 +39,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "2",
@@ -57,7 +61,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "3",
@@ -77,7 +83,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "4",
@@ -97,7 +105,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "5",
@@ -117,7 +127,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "6",
@@ -137,7 +149,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "7",
@@ -157,7 +171,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "8",
@@ -177,7 +193,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "9",
@@ -197,7 +215,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "10",
@@ -217,7 +237,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "11",
@@ -237,7 +259,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "12",
@@ -257,7 +281,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "13",
@@ -277,7 +303,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "14",
@@ -297,7 +325,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "15",
@@ -317,7 +347,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "16",
@@ -337,7 +369,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "17",
@@ -357,7 +391,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "18",
@@ -377,7 +413,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "19",
@@ -397,7 +435,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "20",
@@ -417,7 +457,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "21",
@@ -437,7 +479,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "22",
@@ -457,7 +501,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "23",
@@ -477,7 +523,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "24",
@@ -497,7 +545,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "25",
@@ -517,7 +567,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "26",
@@ -537,7 +589,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "27",
@@ -557,7 +611,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "28",
@@ -577,7 +633,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "29",
@@ -597,7 +655,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "30",
@@ -617,7 +677,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "31",
@@ -637,7 +699,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "32",
@@ -657,7 +721,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "33",
@@ -677,7 +743,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "34",
@@ -697,7 +765,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "35",
@@ -717,7 +787,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "36",
@@ -737,7 +809,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "37",
@@ -757,7 +831,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "38",
@@ -777,7 +853,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "39",
@@ -797,7 +875,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "40",
@@ -817,7 +897,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "41",
@@ -837,7 +919,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "42",
@@ -857,7 +941,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "43",
@@ -877,7 +963,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "44",
@@ -897,7 +985,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "45",
@@ -917,7 +1007,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "46",
@@ -937,7 +1029,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "47",
@@ -957,7 +1051,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "48",
@@ -977,7 +1073,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "49",
@@ -997,7 +1095,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "50",
@@ -1017,7 +1117,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "51",
@@ -1037,7 +1139,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "52",
@@ -1057,7 +1161,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "53",
@@ -1077,7 +1183,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "54",
@@ -1097,7 +1205,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "55",
@@ -1117,7 +1227,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "56",
@@ -1137,7 +1249,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "57",
@@ -1157,7 +1271,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "58",
@@ -1177,7 +1293,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "59",
@@ -1197,7 +1315,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "60",
@@ -1217,7 +1337,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "61",
@@ -1237,7 +1359,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "62",
@@ -1257,7 +1381,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "63",
@@ -1277,7 +1403,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "64",
@@ -1297,7 +1425,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "65",
@@ -1317,7 +1447,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "66",
@@ -1337,7 +1469,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "67",
@@ -1357,7 +1491,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "68",
@@ -1377,7 +1513,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "69",
@@ -1397,7 +1535,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "70",
@@ -1417,7 +1557,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "71",
@@ -1437,7 +1579,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "72",
@@ -1457,7 +1601,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "73",
@@ -1477,7 +1623,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "74",
@@ -1497,7 +1645,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "75",
@@ -1517,7 +1667,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "76",
@@ -1537,7 +1689,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "77",
@@ -1557,7 +1711,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "78",
@@ -1577,7 +1733,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "79",
@@ -1597,7 +1755,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "80",
@@ -1617,7 +1777,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "81",
@@ -1637,7 +1799,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "82",
@@ -1657,7 +1821,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "83",
@@ -1677,7 +1843,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "84",
@@ -1697,7 +1865,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "85",
@@ -1717,7 +1887,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "86",
@@ -1737,7 +1909,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "87",
@@ -1757,7 +1931,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "88",
@@ -1777,7 +1953,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "89",
@@ -1797,7 +1975,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "90",
@@ -1817,7 +1997,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "91",
@@ -1837,7 +2019,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "92",
@@ -1857,7 +2041,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "93",
@@ -1877,7 +2063,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "94",
@@ -1897,7 +2085,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "95",
@@ -1917,7 +2107,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "96",
@@ -1937,7 +2129,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "97",
@@ -1957,7 +2151,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "98",
@@ -1977,7 +2173,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "99",
@@ -1997,7 +2195,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "100",
@@ -2017,7 +2217,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "101",
@@ -2037,7 +2239,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "102",
@@ -2057,7 +2261,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "103",
@@ -2077,7 +2283,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "104",
@@ -2097,7 +2305,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "105",
@@ -2117,7 +2327,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "106",
@@ -2137,7 +2349,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "107",
@@ -2157,7 +2371,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "108",
@@ -2177,7 +2393,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "109",
@@ -2197,7 +2415,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "110",
@@ -2217,7 +2437,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "111",
@@ -2237,7 +2459,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "112",
@@ -2257,7 +2481,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "113",
@@ -2277,7 +2503,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "114",
@@ -2297,7 +2525,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "115",
@@ -2317,7 +2547,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "116",
@@ -2337,7 +2569,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "117",
@@ -2357,7 +2591,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "118",
@@ -2377,7 +2613,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "119",
@@ -2397,7 +2635,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "120",
@@ -2417,7 +2657,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "121",
@@ -2437,7 +2679,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "122",
@@ -2457,7 +2701,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "123",
@@ -2477,7 +2723,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "124",
@@ -2497,7 +2745,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "125",
@@ -2517,7 +2767,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "126",
@@ -2537,7 +2789,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "127",
@@ -2557,7 +2811,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "128",
@@ -2577,7 +2833,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "129",
@@ -2597,7 +2855,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "130",
@@ -2617,7 +2877,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "131",
@@ -2637,7 +2899,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "132",
@@ -2657,7 +2921,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "133",
@@ -2677,7 +2943,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "134",
@@ -2697,7 +2965,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "135",
@@ -2717,7 +2987,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "136",
@@ -2737,7 +3009,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "137",
@@ -2757,7 +3031,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "138",
@@ -2777,7 +3053,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "139",
@@ -2797,7 +3075,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "140",
@@ -2817,7 +3097,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "141",
@@ -2837,7 +3119,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "142",
@@ -2857,7 +3141,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "143",
@@ -2877,7 +3163,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "144",
@@ -2897,7 +3185,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "145",
@@ -2917,7 +3207,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "146",
@@ -2937,7 +3229,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "147",
@@ -2957,7 +3251,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "148",
@@ -2977,7 +3273,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "149",
@@ -2997,7 +3295,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "150",
@@ -3017,7 +3317,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "151",
@@ -3037,7 +3339,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "152",
@@ -3057,7 +3361,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "153",
@@ -3077,7 +3383,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "154",
@@ -3097,7 +3405,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "155",
@@ -3117,7 +3427,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "156",
@@ -3137,7 +3449,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "157",
@@ -3157,7 +3471,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "158",
@@ -3177,7 +3493,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "159",
@@ -3197,7 +3515,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "160",
@@ -3217,7 +3537,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "161",
@@ -3237,7 +3559,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "162",
@@ -3257,7 +3581,9 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   },
   {
     "id": "163",
@@ -3277,6 +3603,8 @@ const INITIAL_DATA = [
     "manufacturer": "",
     "totalWeight": "",
     "mileage": "",
-    "hazmatCertified": ""
+    "hazmatCertified": "",
+    "winterInspection": "",
+    "carrierLicenseSigned": ""
   }
 ];

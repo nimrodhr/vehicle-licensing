@@ -26,7 +26,7 @@ function migrateColumns() {
   }
 
   // Add new column headers at end (after appSynced which is col 15)
-  const newHeaders = ['תסקיר רמפה/מנוף', 'יצרן רכב', 'משקל כולל', 'מספר ק״מ', 'מורשה חומ״ס'];
+  const newHeaders = ['תסקיר רמפה/מנוף', 'יצרן רכב', 'משקל כולל', 'מספר ק״מ', 'מורשה חומ״ס', 'בדיקת חורף', 'נחתם רישיון מוביל עד'];
   const startCol = lastCol + 1;
   sheet.getRange(1, startCol, 1, newHeaders.length).setValues([newHeaders]);
 
@@ -60,7 +60,9 @@ const COLS = {
   manufacturer: 14,
   totalWeight: 15,
   mileage: 16,
-  hazmatCertified: 17
+  hazmatCertified: 17,
+  winterInspection: 18,
+  carrierLicenseSigned: 19
 };
 
 // ============================================================
@@ -185,7 +187,9 @@ function getAllVehicles() {
       manufacturer: String(row[COLS.manufacturer] || ''),
       totalWeight: String(row[COLS.totalWeight] || ''),
       mileage: String(row[COLS.mileage] || ''),
-      hazmatCertified: String(row[COLS.hazmatCertified] || '')
+      hazmatCertified: String(row[COLS.hazmatCertified] || ''),
+      winterInspection: formatDateValue(row[COLS.winterInspection]),
+      carrierLicenseSigned: formatDateValue(row[COLS.carrierLicenseSigned])
     });
   }
 
@@ -226,7 +230,9 @@ function updateVehicle(record) {
     record.manufacturer || '',
     record.totalWeight || '',
     record.mileage || '',
-    record.hazmatCertified || ''
+    record.hazmatCertified || '',
+    parseDateString(record.winterInspection),
+    parseDateString(record.carrierLicenseSigned)
   ];
 
   sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
@@ -269,7 +275,9 @@ function addVehicle(record) {
     record.manufacturer || '',
     record.totalWeight || '',
     record.mileage || '',
-    record.hazmatCertified || ''
+    record.hazmatCertified || '',
+    parseDateString(record.winterInspection),
+    parseDateString(record.carrierLicenseSigned)
   ];
 
   sheet.appendRow(rowData);
