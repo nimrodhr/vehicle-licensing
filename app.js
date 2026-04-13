@@ -911,8 +911,13 @@ async function saveSettings(event) {
 
     const success = await loadAllData();
     if (success) {
+        document.getElementById('setup-banner').classList.add('hidden');
+        showStatus('מחובר ל-Google Sheets', false);
         populateFilters();
         renderCurrentPage();
+    } else {
+        document.getElementById('setup-banner').classList.remove('hidden');
+        showStatus('שגיאה בחיבור', true);
     }
 }
 
