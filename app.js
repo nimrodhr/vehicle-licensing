@@ -36,28 +36,15 @@ async function apiGet(action) {
     return await resp.json();
 }
 
-async function apiPost(payload) {
+async function apiAction(action, params) {
     if (!APPS_SCRIPT_URL) throw new Error('API URL not configured');
 
-    // Google Apps Script processes the POST, then redirects the response.
-    // The redirect can fail due to CORS, but the data IS saved.
-    // Strategy: send POST, ignore response errors, then verify via GET.
-    try {
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            redirect: 'follow'
-        });
-    } catch (err) {
-        // CORS/redirect error is expected - POST still went through
-        console.log('POST sent (redirect caught):', err.message);
-    }
-
-    // Wait a moment for Google Sheets to process
-    await new Promise(r => setTimeout(r, 1000));
-
-    // Verify the change went through by re-reading data
-    return { status: 'ok' };
+    // Use GET for ALL operations (POST has CORS/redirect issues with Apps Script)
+    const urlParams = new URLSearchParams({ action, ...params });
+    const url = `${APPS_SCRIPT_URL}?${urlParams.toString()}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`API Error: ${resp.status}`);
+    return await resp.json();
 }
 
 // ============================================================
@@ -102,10 +89,10 @@ function loadDeficiencies() {
 async function saveRecord(record) {
     showLoading(true);
     try {
-        const result = await apiPost({ action: 'updateRecord', record });
+        const result = await apiAction('updateRecord', { data: JSON.stringify(record) });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('נשמר בהצלחה ב-Google Sheets');
-        await loadAllData(); // Refresh
+        await loadAllData();
         return true;
     } catch (err) {
         showSaveIndicator('שגיאה בשמירה: ' + err.message, true);
@@ -118,7 +105,7 @@ async function saveRecord(record) {
 async function addNewRecord(record) {
     showLoading(true);
     try {
-        const result = await apiPost({ action: 'addRecord', record });
+        const result = await apiAction('addRecord', { data: JSON.stringify(record) });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('רשומה חדשה נוספה');
         await loadAllData();
@@ -134,7 +121,7 @@ async function addNewRecord(record) {
 async function deleteRecord(licenseNumber) {
     showLoading(true);
     try {
-        const result = await apiPost({ action: 'deleteRecord', licenseNumber });
+        const result = await apiAction('deleteRecord', { licenseNumber });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('רשומה נמחקה');
         await loadAllData();
@@ -149,10 +136,9 @@ async function deleteRecord(licenseNumber) {
 
 async function saveDeficiencyData(licenseNumber, deficiencies) {
     try {
-        const result = await apiPost({
-            action: 'saveDeficiency',
+        const result = await apiAction('saveDeficiency', {
             licenseNumber,
-            deficiencies
+            data: JSON.stringify(deficiencies)
         });
         if (result.error) throw new Error(result.error);
         _deficiencyData[licenseNumber] = deficiencies;
