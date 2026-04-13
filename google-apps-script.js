@@ -21,7 +21,8 @@ const COLS = {
   carrierLicense: 10,
   inspectionDate: 11,
   contactName: 12,
-  contactPhone: 13
+  contactPhone: 13,
+  appSynced: 14
 };
 
 // ============================================================
@@ -57,6 +58,9 @@ function doGet(e) {
     if (action === 'saveDeficiency') {
       const defs = JSON.parse(e.parameter.data);
       return jsonResponse(saveDeficiency(e.parameter.licenseNumber, defs));
+    }
+    if (action === 'updateAppSync') {
+      return jsonResponse(updateAppSync(e.parameter.licenseNumber, e.parameter.value));
     }
 
     return jsonResponse({ error: 'Unknown action' });
@@ -128,7 +132,8 @@ function getAllVehicles() {
       carrierLicense: formatDateValue(row[COLS.carrierLicense]),
       inspectionDate: formatDateValue(row[COLS.inspectionDate]),
       contactName: String(row[COLS.contactName] || ''),
-      contactPhone: String(row[COLS.contactPhone] || '')
+      contactPhone: String(row[COLS.contactPhone] || ''),
+      appSynced: String(row[COLS.appSynced] || '')
     });
   }
 
@@ -164,12 +169,22 @@ function updateVehicle(record) {
     parseDateString(record.carrierLicense),
     parseDateString(record.inspectionDate),
     record.contactName || '',
-    record.contactPhone || ''
+    record.contactPhone || '',
+    record.appSynced || ''
   ];
 
   sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
 
   return { status: 'ok', message: 'Updated' };
+}
+
+function updateAppSync(licenseNumber, value) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  const rowIndex = findRowByLicense(sheet, licenseNumber);
+  if (rowIndex === -1) return { error: 'Record not found: ' + licenseNumber };
+  sheet.getRange(rowIndex, COLS.appSynced + 1).setValue(value);
+  return { status: 'ok', message: 'Sync updated' };
 }
 
 // ============================================================
@@ -194,7 +209,8 @@ function addVehicle(record) {
     parseDateString(record.carrierLicense),
     parseDateString(record.inspectionDate),
     record.contactName || '',
-    record.contactPhone || ''
+    record.contactPhone || '',
+    ''
   ];
 
   sheet.appendRow(rowData);

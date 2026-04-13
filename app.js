@@ -562,8 +562,6 @@ function renderWorkPage() {
     }
 
     const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
-    const totalCols = fieldsToShow.length + 7; // visit-status + customer + vehicle + type + fields + inspection + deficiencies + button
-
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
             <span>דף עבודה - ${monthName}</span>
@@ -574,11 +572,13 @@ function renderWorkPage() {
             <thead><tr>
                 <th></th>
                 <th>לקוח</th>
+                <th>איש קשר</th>
                 <th>רכב</th>
                 <th>סוג</th>
                 <th>ביקור אחרון</th>
                 ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
                 <th>ליקויים</th>
+                <th>מערכת</th>
                 <th></th>
             </tr></thead>
             <tbody>`;
@@ -599,11 +599,18 @@ function renderWorkPage() {
             inspectionCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.inspectionDate)}</div><div class="work-cell-days">${daysText}</div></td>`;
         }
 
+        // App sync status
+        const isSynced = rec.appSynced === 'yes';
+        const syncBtnClass = isSynced ? 'sync-btn-done' : 'sync-btn-pending';
+        const syncIcon = isSynced ? '&#10003;' : '&#10007;';
+        const syncTitle = isSynced ? 'עודכן במערכת' : 'לא עודכן במערכת';
+
         html += `<tr class="work-vehicle-row ${rowClass}">`;
         html += `<td class="text-center ${visitIconClass}">${visitIcon}</td>`;
+        html += `<td class="font-semibold">${rec.customerName}</td>`;
         html += `<td>
-            <div class="font-semibold">${rec.customerName}</div>
-            <div class="text-xs text-gray-500">${rec.contactName || ''}</div>
+            <div class="text-xs">${rec.contactName || '-'}</div>
+            ${rec.contactPhone ? `<div class="text-xs"><a href="tel:${rec.contactPhone}" class="text-blue-600">${rec.contactPhone}</a></div>` : ''}
         </td>`;
         html += `<td class="font-bold">${rec.licenseNumber}</td>`;
         html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
@@ -632,6 +639,13 @@ function renderWorkPage() {
         } else {
             html += `<td class="work-cell work-cell-empty text-center">-</td>`;
         }
+
+        html += `<td class="text-center">
+            <button onclick="event.stopPropagation();toggleAppSync('${rec.licenseNumber}')"
+                class="sync-btn ${syncBtnClass}" title="${syncTitle}">
+                ${syncIcon}
+            </button>
+        </td>`;
 
         html += `<td>
             <button onclick="openEditModal('${rec.licenseNumber}')"
@@ -716,6 +730,8 @@ function renderManagePage() {
 
 let tempDeficiencies = [];
 let editingLicenseNumber = '';
+let editingOldInspectionDate = '';
+let editingOldAppSynced = '';
 
 function openEditModal(licenseNumber) {
     const data = getData();
@@ -723,6 +739,8 @@ function openEditModal(licenseNumber) {
     if (!record) return;
 
     editingLicenseNumber = record.licenseNumber;
+    editingOldInspectionDate = record.inspectionDate || '';
+    editingOldAppSynced = record.appSynced || '';
     document.getElementById('modal-title').textContent = `עריכת רכב: ${record.licenseNumber} - ${record.customerName}`;
 
     const defs = loadDeficiencies();
@@ -849,7 +867,8 @@ async function handleSaveEdit(event) {
         carrierLicense: form.elements.carrierLicense.value,
         inspectionDate: form.elements.inspectionDate.value,
         contactName: form.elements.contactName.value,
-        contactPhone: form.elements.contactPhone.value
+        contactPhone: form.elements.contactPhone.value,
+        appSynced: form.elements.inspectionDate.value !== editingOldInspectionDate ? 'no' : editingOldAppSynced
     };
 
     const success = await saveRecord(record);
@@ -863,6 +882,25 @@ async function handleSaveEdit(event) {
 
 function closeModal() {
     document.getElementById('edit-modal').classList.add('hidden');
+}
+
+async function toggleAppSync(licenseNumber) {
+    const data = getData();
+    const record = data.find(r => r.licenseNumber === licenseNumber);
+    if (!record) return;
+
+    const newValue = record.appSynced === 'yes' ? 'no' : 'yes';
+    record.appSynced = newValue;
+    renderCurrentPage();
+
+    try {
+        await apiAction('updateAppSync', { licenseNumber, value: newValue });
+        showSaveIndicator('עודכן בהצלחה');
+    } catch (err) {
+        showSaveIndicator('שגיאה בעדכון: ' + err.message, true);
+        record.appSynced = record.appSynced === 'yes' ? 'no' : 'yes';
+        renderCurrentPage();
+    }
 }
 
 // ============================================================
