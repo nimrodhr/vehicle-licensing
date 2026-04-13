@@ -1007,10 +1007,19 @@ function showCustomerSuggestions(input) {
     if (matches.length === 0 || (matches.length === 1 && matches[0] === val)) {
         dropdown.innerHTML = ''; dropdown.style.display = 'none'; return;
     }
-    dropdown.innerHTML = matches.map(name =>
-        `<div class="suggestion-item" onmousedown="selectCustomer('${name.replace(/'/g, "\\'")}', '${(customers[name] || '').replace(/'/g, "\\'")}')">${name}</div>`
+    dropdown.innerHTML = matches.map((name, i) =>
+        `<div class="suggestion-item" data-idx="${i}" onmousedown="selectCustomerByIdx(${i})">${name}</div>`
     ).join('');
+    dropdown._matches = matches;
+    dropdown._customers = customers;
     dropdown.style.display = 'block';
+}
+
+function selectCustomerByIdx(idx) {
+    const dropdown = document.getElementById('customer-suggestions');
+    const name = dropdown._matches[idx];
+    const location = dropdown._customers[name] || '';
+    selectCustomer(name, location);
 }
 
 function selectCustomer(name, location) {
