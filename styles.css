@@ -367,13 +367,18 @@
 }
 
 /* License status badges */
+.license-badges-cell {
+    max-width: 140px;
+    line-height: 1.4;
+}
+
 .license-badge {
     display: inline-block;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.65rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.6rem;
     font-weight: 600;
-    margin: 1px 2px;
+    margin: 1px 1px;
     white-space: nowrap;
 }
 

@@ -622,7 +622,7 @@ function renderWorkPage() {
                 return `<span class="license-badge license-badge-${i.status}">${i.label} ${daysText}</span>`;
             }).join('');
             const worstStatus = issues.some(i => i.status === 'expired') ? 'expired' : issues.some(i => i.status === 'critical') ? 'critical' : 'warning';
-            licenseCell = `<td class="work-cell work-cell-${worstStatus}">${badges}</td>`;
+            licenseCell = `<td class="work-cell work-cell-${worstStatus} license-badges-cell">${badges}</td>`;
         }
 
         // App sync status
