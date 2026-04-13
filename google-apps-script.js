@@ -29,11 +29,22 @@ const COLS = {
 // HTTP Handlers
 // ============================================================
 
+function ensureAppSyncedColumn() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+  const header = sheet.getRange(1, COLS.appSynced + 1).getValue();
+  if (!header) {
+    sheet.getRange(1, COLS.appSynced + 1).setValue('appSynced');
+  }
+}
+
 function doGet(e) {
   try {
     const action = e.parameter.action || 'getData';
 
     if (action === 'getData') {
+      ensureAppSyncedColumn();
       return jsonResponse(getAllVehicles());
     }
     if (action === 'getSheetName') {
