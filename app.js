@@ -295,7 +295,8 @@ function populateFilters() {
         const current = el.value;
         el.innerHTML = '<option value="">הכל</option>';
         locations.forEach(loc => {
-            el.innerHTML += `<option value="${loc}" ${loc === current ? 'selected' : ''}>${loc}</option>`;
+            const escaped = loc.replace(/"/g, '&quot;');
+            el.innerHTML += `<option value="${escaped}" ${loc === current ? 'selected' : ''}>${loc}</option>`;
         });
     });
 
@@ -304,7 +305,8 @@ function populateFilters() {
         const current = workCust.value;
         workCust.innerHTML = '<option value="">הכל</option>';
         customers.forEach(c => {
-            workCust.innerHTML += `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`;
+            const escaped = c.replace(/"/g, '&quot;');
+            workCust.innerHTML += `<option value="${escaped}" ${c === current ? 'selected' : ''}>${c}</option>`;
         });
     }
 }
