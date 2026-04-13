@@ -195,6 +195,10 @@ function getRecordWorstStatus(record) {
     return worst;
 }
 
+function normalizeStr(s) {
+    return (s || '').trim().replace(/\s+/g, ' ');
+}
+
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     const parts = dateStr.split('-');
@@ -283,8 +287,8 @@ function renderCurrentPage() {
 
 function populateFilters() {
     const data = getData();
-    const locations = [...new Set(data.map(r => (r.location || '').trim()))].filter(Boolean).sort();
-    const customers = [...new Set(data.map(r => (r.customerName || '').trim()))].filter(Boolean).sort();
+    const locations = [...new Set(data.map(r => normalizeStr(r.location)))].filter(Boolean).sort();
+    const customers = [...new Set(data.map(r => normalizeStr(r.customerName)))].filter(Boolean).sort();
 
     ['dash-location', 'work-location'].forEach(id => {
         const el = document.getElementById(id);
@@ -357,7 +361,7 @@ function renderDashboard() {
 
     let filtered = data.filter(r => {
         if (search && !r.customerName.toLowerCase().includes(search) && !r.licenseNumber.includes(search)) return false;
-        if (location && (r.location || '').trim() !== location) return false;
+        if (location && normalizeStr(r.location) !== location) return false;
         if (vType && r.vehicleType !== vType) return false;
         if (statusFilter) {
             const worst = getRecordWorstStatus(r);
@@ -541,8 +545,8 @@ function renderWorkPage() {
     // Build vehicle list with visit status and issues
     const vehicles = [];
     data.forEach(record => {
-        if (location && (record.location || '').trim() !== location) return;
-        if (customer && (record.customerName || '').trim() !== customer) return;
+        if (location && normalizeStr(record.location) !== location) return;
+        if (customer && normalizeStr(record.customerName) !== customer) return;
         if (syncFilter === 'no' && record.appSynced === 'yes') return;
         if (syncFilter === 'yes' && record.appSynced !== 'yes') return;
 
