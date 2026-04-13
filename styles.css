@@ -314,6 +314,27 @@
     background-color: #1d4ed8;
 }
 
+/* Visit status rows */
+.work-row-visited {
+    background-color: #f0fdf4;
+}
+
+.work-row-not-visited {
+    background-color: #fff7ed;
+}
+
+.visit-icon-done {
+    color: #16a34a;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.visit-icon-pending {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .work-card {

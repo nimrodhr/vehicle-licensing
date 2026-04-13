@@ -380,11 +380,24 @@ function renderDashboard() {
         });
     });
 
+    // Count vehicles not yet visited this month
+    const monthStart = today().slice(0, 7) + '-01'; // YYYY-MM-01
+    const notVisited = data.filter(r => !r.inspectionDate || r.inspectionDate < monthStart).length;
+
+    // Display today's date
+    const todayDate = new Date();
+    const dateStr = todayDate.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('dashboard-date').textContent = dateStr;
+
     document.getElementById('summary-cards').innerHTML = `
         <div class="summary-card bg-white border-r-4 border-blue-500 cursor-pointer" onclick="document.getElementById('dash-status').value='';document.getElementById('dash-search').value='';document.getElementById('dash-location').value='';document.getElementById('dash-type').value='';renderDashboard()">
             <div class="text-3xl font-bold text-blue-600">${data.length}</div>
             <div class="text-sm text-gray-600">סה"כ כלי רכב</div>
             <div class="text-xs text-gray-400 mt-1">${uniqueCustomers} לקוחות</div>
+        </div>
+        <div class="summary-card bg-white border-r-4 border-cyan-600">
+            <div class="text-3xl font-bold text-cyan-700">${notVisited}</div>
+            <div class="text-sm text-gray-600">נותרו לביקור החודש</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-red-500 cursor-pointer" onclick="document.getElementById('dash-status').value='expired';renderDashboard()">
             <div class="text-3xl font-bold text-red-600">${expired}</div>
@@ -511,138 +524,121 @@ function renderWorkPage() {
     const customer = document.getElementById('work-customer')?.value || '';
     const fieldFilter = document.getElementById('work-field')?.value || '';
 
-    // Find all vehicles that have at least one non-valid date field or open deficiencies
-    const statusPriority = { expired: 0, critical: 1, warning: 2, valid: 3, empty: 4 };
-    const vehicles = [];
     const defs = loadDeficiencies();
+    const monthStart = today().slice(0, 7) + '-01'; // YYYY-MM-01
 
+    // Build vehicle list with visit status and issues
+    const vehicles = [];
     data.forEach(record => {
         if (location && record.location !== location) return;
         if (customer && record.customerName !== customer) return;
 
-        const fieldsToCheck = fieldFilter ? [fieldFilter] : DATE_FIELDS;
-        let worst = 'valid';
-        let hasIssue = false;
-
-        fieldsToCheck.forEach(field => {
-            const val = record[field];
-            if (!val) return;
-            const status = getDateStatus(val);
-            if (status === 'expired' || status === 'critical' || status === 'warning') {
-                hasIssue = true;
-                if (statusPriority[status] < statusPriority[worst]) worst = status;
-            }
-        });
-
-        // Check for open deficiencies
         const vehicleDefs = defs[record.licenseNumber] || [];
-        const openDefs = vehicleDefs.filter(d => d.status === 'open' || d.status === 'in-progress');
+        const openDefs = vehicleDefs.filter(d => d.status === 'open' || d.status === 'in-progress').length;
+        const visitedThisMonth = record.inspectionDate && record.inspectionDate >= monthStart;
 
-        if (hasIssue || openDefs.length > 0) {
-            vehicles.push({ record, worstStatus: worst, worstPriority: statusPriority[worst], openDefs: openDefs.length });
-        }
+        vehicles.push({ record, openDefs, visitedThisMonth });
     });
 
-    // Sort by worst status priority, then by customer name
-    vehicles.sort((a, b) => a.worstPriority - b.worstPriority || a.record.customerName.localeCompare(b.record.customerName, 'he'));
+    // Sort by inspectionDate ascending (oldest/empty first = needs visit most)
+    vehicles.sort((a, b) => {
+        const dateA = a.record.inspectionDate || '0000-00-00';
+        const dateB = b.record.inspectionDate || '0000-00-00';
+        return dateA.localeCompare(dateB);
+    });
+
+    // Current month name
+    const monthName = new Date().toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+    const visitedCount = vehicles.filter(v => v.visitedThisMonth).length;
+    const remainingCount = vehicles.length - visitedCount;
 
     if (!vehicles.length) {
         document.getElementById('work-content').innerHTML = `<div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
             <div class="text-4xl mb-2">&#10003;</div>
-            <div class="text-lg font-bold text-green-700">אין התראות!</div>
-            <div class="text-sm text-green-600">כל הרישיונות תקינים בטווח הסינון הנוכחי</div>
+            <div class="text-lg font-bold text-green-700">אין רכבים להצגה</div>
         </div>`;
         updateFilterIndicator(['work-location', 'work-customer', 'work-field'], 'clearWorkFilters()', 'page-work');
         return;
     }
 
-    // Group by location → customer
-    const grouped = {};
-    vehicles.forEach(({ record, openDefs }) => {
-        const loc = record.location;
-        const cust = record.customerName;
-        if (!grouped[loc]) grouped[loc] = {};
-        if (!grouped[loc][cust]) grouped[loc][cust] = { contact: record.contactName, phone: record.contactPhone, vehicles: [] };
-        grouped[loc][cust].vehicles.push({ ...record, _openDefs: openDefs });
-    });
-
     const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
-    const totalCols = fieldsToShow.length + 5; // customer + vehicle + type + fields + deficiencies + button
+    const totalCols = fieldsToShow.length + 7; // visit-status + customer + vehicle + type + fields + inspection + deficiencies + button
 
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
-            <span>דף עבודה - ${vehicles.length} כלי רכב לטיפול</span>
+            <span>דף עבודה - ${monthName}</span>
+            <span>${visitedCount}/${vehicles.length} בוקרו | ${remainingCount} נותרו</span>
         </div>
         <div class="table-container">
         <table class="work-table">
             <thead><tr>
+                <th></th>
                 <th>לקוח</th>
                 <th>רכב</th>
                 <th>סוג</th>
+                <th>ביקור אחרון</th>
                 ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
                 <th>ליקויים</th>
                 <th></th>
             </tr></thead>
             <tbody>`;
 
-    const sortedLocations = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
+    vehicles.forEach(({ record: rec, openDefs, visitedThisMonth }) => {
+        const rowClass = visitedThisMonth ? 'work-row-visited' : 'work-row-not-visited';
+        const visitIcon = visitedThisMonth ? '&#10003;' : '&#10007;';
+        const visitIconClass = visitedThisMonth ? 'visit-icon-done' : 'visit-icon-pending';
 
-    sortedLocations.forEach(loc => {
-        html += `<tr class="work-location-row"><td colspan="${totalCols}">${loc}</td></tr>`;
+        // Inspection date display
+        let inspectionCell = '';
+        if (!rec.inspectionDate) {
+            inspectionCell = `<td class="work-cell work-cell-expired text-center"><div>-</div><div class="work-cell-days">לא בוקר</div></td>`;
+        } else {
+            const daysSince = -daysUntil(rec.inspectionDate);
+            const daysText = daysSince === 0 ? 'היום' : daysSince === 1 ? 'אתמול' : `לפני ${daysSince} ימים`;
+            const cellClass = visitedThisMonth ? 'work-cell-valid' : (daysSince > 45 ? 'work-cell-expired' : 'work-cell-warning');
+            inspectionCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.inspectionDate)}</div><div class="work-cell-days">${daysText}</div></td>`;
+        }
 
-        const sortedCustomers = Object.keys(grouped[loc]).sort((a, b) => a.localeCompare(b, 'he'));
+        html += `<tr class="work-vehicle-row ${rowClass}">`;
+        html += `<td class="text-center ${visitIconClass}">${visitIcon}</td>`;
+        html += `<td>
+            <div class="font-semibold">${rec.customerName}</div>
+            <div class="text-xs text-gray-500">${rec.contactName || ''}</div>
+        </td>`;
+        html += `<td class="font-bold">${rec.licenseNumber}</td>`;
+        html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
+        html += inspectionCell;
 
-        sortedCustomers.forEach(cust => {
-            const custData = grouped[loc][cust];
-            const custVehicles = custData.vehicles;
-            const rowspan = custVehicles.length;
-
-            custVehicles.forEach((rec, idx) => {
-                html += `<tr class="work-vehicle-row">`;
-
-                // Customer cell only on first row, with rowspan
-                if (idx === 0) {
-                    html += `<td class="work-customer-cell" rowspan="${rowspan}">
-                        <div class="font-semibold">${cust}</div>
-                        <div class="text-xs text-gray-500">${custData.contact} - <a href="tel:${custData.phone}" class="text-blue-600">${custData.phone}</a></div>
-                    </td>`;
-                }
-
-                html += `<td class="font-bold">${rec.licenseNumber}</td>
-                    <td class="text-gray-500">${rec.vehicleType}</td>`;
-
-                fieldsToShow.forEach(field => {
-                    const val = rec[field];
-                    const status = getDateStatus(val);
-                    if (!val) {
-                        html += `<td class="work-cell work-cell-empty">-</td>`;
-                    } else {
-                        const days = daysUntil(val);
-                        const daysText = days < 0
-                            ? `פג לפני ${Math.abs(days)} ימים`
-                            : days === 0 ? 'פג היום!'
-                            : `עוד ${days} ימים`;
-                        html += `<td class="work-cell work-cell-${status}">
-                            <div>${formatDate(val)}</div>
-                            <div class="work-cell-days">${daysText}</div>
-                        </td>`;
-                    }
-                });
-
-                if (rec._openDefs > 0) {
-                    html += `<td class="work-cell work-cell-expired text-center"><div>${rec._openDefs}</div><div class="work-cell-days">פתוחים</div></td>`;
-                } else {
-                    html += `<td class="work-cell work-cell-empty text-center">-</td>`;
-                }
-
-                html += `<td>
-                    <button onclick="openEditModal('${rec.licenseNumber}')"
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">
-                        עדכן
-                    </button>
-                </td></tr>`;
-            });
+        fieldsToShow.forEach(field => {
+            const val = rec[field];
+            const status = getDateStatus(val);
+            if (!val) {
+                html += `<td class="work-cell work-cell-empty">-</td>`;
+            } else {
+                const days = daysUntil(val);
+                const daysText = days < 0
+                    ? `פג לפני ${Math.abs(days)} ימים`
+                    : days === 0 ? 'פג היום!'
+                    : `עוד ${days} ימים`;
+                html += `<td class="work-cell work-cell-${status}">
+                    <div>${formatDate(val)}</div>
+                    <div class="work-cell-days">${daysText}</div>
+                </td>`;
+            }
         });
+
+        if (openDefs > 0) {
+            html += `<td class="work-cell work-cell-expired text-center"><div>${openDefs}</div><div class="work-cell-days">פתוחים</div></td>`;
+        } else {
+            html += `<td class="work-cell work-cell-empty text-center">-</td>`;
+        }
+
+        html += `<td>
+            <button onclick="openEditModal('${rec.licenseNumber}')"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">
+                עדכן
+            </button>
+        </td></tr>`;
     });
 
     html += '</tbody></table></div></div>';
