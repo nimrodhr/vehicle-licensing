@@ -468,10 +468,17 @@ function renderDashboard() {
         <th>סטטוס</th><th>איש קשר</th><th>טלפון</th>
     </tr></thead><tbody>`;
 
+    const allDefs = loadDeficiencies();
     Object.entries(byCustomer).sort((a, b) => a[0].localeCompare(b[0], 'he')).forEach(([name, info]) => {
         const worstStatuses = info.vehicles.map(v => getRecordWorstStatus(v));
         const priority = { expired: 0, critical: 1, warning: 2, valid: 3 };
         const worst = worstStatuses.reduce((a, b) => priority[a] < priority[b] ? a : b, 'valid');
+
+        const customerOpenDefs = info.vehicles.reduce((sum, v) => {
+            const vDefs = allDefs[v.licenseNumber] || [];
+            return sum + vDefs.filter(d => d.status === 'open' || d.status === 'in-progress').length;
+        }, 0);
+        const defBadge = customerOpenDefs > 0 ? ` <span class="inline-block bg-purple-100 text-purple-700 text-xs font-bold px-1.5 py-0.5 rounded-full">${customerOpenDefs} ליקויים</span>` : '';
 
         const escapedName = name.replace(/'/g, "\\'");
         html += `<tr class="cursor-pointer" onclick="toggleCustomerExpand(this, '${escapedName}')">
@@ -479,7 +486,7 @@ function renderDashboard() {
             <td class="font-medium">${name}</td>
             <td>${info.location}</td>
             <td>${info.vehicles.length}</td>
-            <td><span class="badge status-${worst}">${statusLabel(worst)}</span></td>
+            <td><span class="badge status-${worst}">${statusLabel(worst)}</span>${defBadge}</td>
             <td>${info.contact}</td>
             <td><a href="tel:${info.phone}" class="text-blue-600 hover:underline">${info.phone}</a></td>
         </tr>`;
@@ -509,15 +516,18 @@ function toggleCustomerExpand(row, customerName) {
     row.querySelector('td:first-child').innerHTML = '&#9660;';
 
     const data = getData().filter(r => r.customerName === customerName);
+    const expandDefs = loadDeficiencies();
     let detailHtml = '<td colspan="7" class="p-0"><div class="vehicle-detail bg-blue-50 p-4">';
     detailHtml += '<table class="data-table" style="font-size:0.75rem">';
     detailHtml += `<thead><tr>
         <th>רישוי</th><th>סוג</th><th>תוקף רישוי</th><th>ביטוח חובה</th>
         <th>ביטוח מקיף</th><th>כיול</th><th>ציוד</th><th>בלמים</th>
-        <th>מוביל</th><th>בדיקה</th><th>פעולות</th>
+        <th>מוביל</th><th>בדיקה</th><th>ליקויים</th><th>פעולות</th>
     </tr></thead><tbody>`;
 
     data.forEach(v => {
+        const vOpenDefs = (expandDefs[v.licenseNumber] || []).filter(d => d.status === 'open' || d.status === 'in-progress').length;
+        const defCell = vOpenDefs > 0 ? `<span class="inline-block bg-purple-100 text-purple-700 text-xs font-bold px-1.5 py-0.5 rounded-full">${vOpenDefs}</span>` : '-';
         detailHtml += `<tr>
             <td class="font-medium">${v.licenseNumber}</td>
             <td>${v.vehicleType}</td>
@@ -529,6 +539,7 @@ function toggleCustomerExpand(row, customerName) {
             <td class="date-${getDateStatus(v.brakeTestExpiry)}">${formatDate(v.brakeTestExpiry)}</td>
             <td class="date-${getDateStatus(v.carrierLicense)}">${formatDate(v.carrierLicense)}</td>
             <td>${formatDate(v.inspectionDate)}</td>
+            <td>${defCell}</td>
             <td><button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button></td>
         </tr>`;
     });
