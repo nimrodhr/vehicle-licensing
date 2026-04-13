@@ -546,7 +546,10 @@ function renderWorkPage() {
     const vehicles = [];
     data.forEach(record => {
         if (location && normalizeStr(record.location) !== location) return;
-        if (customer && normalizeStr(record.customerName) !== customer) return;
+        if (customer && normalizeStr(record.customerName) !== customer) {
+            console.log('FILTER MISMATCH:', JSON.stringify(Array.from(record.customerName)).toString(), 'vs', JSON.stringify(Array.from(customer)).toString());
+            return;
+        }
         if (syncFilter === 'no' && record.appSynced === 'yes') return;
         if (syncFilter === 'yes' && record.appSynced !== 'yes') return;
 
