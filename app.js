@@ -564,7 +564,7 @@ function renderWorkPage() {
         return;
     }
 
-    const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
+    const fieldsToCheck = fieldFilter ? [fieldFilter] : DATE_FIELDS;
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
             <span>דף עבודה - ${monthName}</span>
@@ -579,7 +579,7 @@ function renderWorkPage() {
                 <th>רכב</th>
                 <th>סוג</th>
                 <th>ביקור אחרון</th>
-                ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
+                <th>סטטוס רישויים</th>
                 <th>ליקויים</th>
                 <th>מערכת</th>
                 <th></th>
@@ -602,6 +602,29 @@ function renderWorkPage() {
             inspectionCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.inspectionDate)}</div><div class="work-cell-days">${daysText}</div></td>`;
         }
 
+        // License status summary - consolidate 7 date fields into one cell
+        const issues = [];
+        fieldsToCheck.forEach(field => {
+            const val = rec[field];
+            if (!val) return;
+            const status = getDateStatus(val);
+            if (status === 'expired' || status === 'critical' || status === 'warning') {
+                issues.push({ label: FIELD_LABELS[field], status, days: daysUntil(val) });
+            }
+        });
+
+        let licenseCell = '';
+        if (issues.length === 0) {
+            licenseCell = `<td class="work-cell work-cell-valid text-center"><div>תקין</div></td>`;
+        } else {
+            const badges = issues.map(i => {
+                const daysText = i.days < 0 ? `פג ${Math.abs(i.days)}י'` : i.days === 0 ? 'פג היום' : `${i.days}י'`;
+                return `<span class="license-badge license-badge-${i.status}">${i.label} ${daysText}</span>`;
+            }).join('');
+            const worstStatus = issues.some(i => i.status === 'expired') ? 'expired' : issues.some(i => i.status === 'critical') ? 'critical' : 'warning';
+            licenseCell = `<td class="work-cell work-cell-${worstStatus}">${badges}</td>`;
+        }
+
         // App sync status
         const isSynced = rec.appSynced === 'yes';
         const syncBtnClass = isSynced ? 'sync-btn-done' : 'sync-btn-pending';
@@ -618,24 +641,7 @@ function renderWorkPage() {
         html += `<td class="font-bold">${rec.licenseNumber}</td>`;
         html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
         html += inspectionCell;
-
-        fieldsToShow.forEach(field => {
-            const val = rec[field];
-            const status = getDateStatus(val);
-            if (!val) {
-                html += `<td class="work-cell work-cell-empty">-</td>`;
-            } else {
-                const days = daysUntil(val);
-                const daysText = days < 0
-                    ? `פג לפני ${Math.abs(days)} ימים`
-                    : days === 0 ? 'פג היום!'
-                    : `עוד ${days} ימים`;
-                html += `<td class="work-cell work-cell-${status}">
-                    <div>${formatDate(val)}</div>
-                    <div class="work-cell-days">${daysText}</div>
-                </td>`;
-            }
-        });
+        html += licenseCell;
 
         if (openDefs > 0) {
             html += `<td class="work-cell work-cell-expired text-center"><div>${openDefs}</div><div class="work-cell-days">פתוחים</div></td>`;
