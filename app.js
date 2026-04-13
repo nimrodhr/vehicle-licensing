@@ -283,8 +283,8 @@ function renderCurrentPage() {
 
 function populateFilters() {
     const data = getData();
-    const locations = [...new Set(data.map(r => r.location))].sort();
-    const customers = [...new Set(data.map(r => r.customerName))].sort();
+    const locations = [...new Set(data.map(r => (r.location || '').trim()))].filter(Boolean).sort();
+    const customers = [...new Set(data.map(r => (r.customerName || '').trim()))].filter(Boolean).sort();
 
     ['dash-location', 'work-location'].forEach(id => {
         const el = document.getElementById(id);
@@ -357,7 +357,7 @@ function renderDashboard() {
 
     let filtered = data.filter(r => {
         if (search && !r.customerName.toLowerCase().includes(search) && !r.licenseNumber.includes(search)) return false;
-        if (location && r.location !== location) return false;
+        if (location && (r.location || '').trim() !== location) return false;
         if (vType && r.vehicleType !== vType) return false;
         if (statusFilter) {
             const worst = getRecordWorstStatus(r);
@@ -541,8 +541,8 @@ function renderWorkPage() {
     // Build vehicle list with visit status and issues
     const vehicles = [];
     data.forEach(record => {
-        if (location && record.location !== location) return;
-        if (customer && record.customerName !== customer) return;
+        if (location && (record.location || '').trim() !== location) return;
+        if (customer && (record.customerName || '').trim() !== customer) return;
         if (syncFilter === 'no' && record.appSynced === 'yes') return;
         if (syncFilter === 'yes' && record.appSynced !== 'yes') return;
 
