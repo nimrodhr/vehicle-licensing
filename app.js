@@ -371,6 +371,15 @@ function renderDashboard() {
         });
     });
 
+    // Count open deficiencies
+    const defs = loadDeficiencies();
+    let openDefs = 0;
+    Object.values(defs).forEach(arr => {
+        arr.forEach(d => {
+            if (d.status === 'open' || d.status === 'in-progress') openDefs++;
+        });
+    });
+
     document.getElementById('summary-cards').innerHTML = `
         <div class="summary-card bg-white border-r-4 border-blue-500 cursor-pointer" onclick="document.getElementById('dash-status').value='';document.getElementById('dash-search').value='';document.getElementById('dash-location').value='';document.getElementById('dash-type').value='';renderDashboard()">
             <div class="text-3xl font-bold text-blue-600">${data.length}</div>
@@ -392,6 +401,10 @@ function renderDashboard() {
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
             <div class="text-sm text-gray-600">רישיונות תקינים</div>
+        </div>
+        <div class="summary-card bg-white border-r-4 border-purple-500">
+            <div class="text-3xl font-bold text-purple-600">${openDefs}</div>
+            <div class="text-sm text-gray-600">ליקויים פתוחים</div>
         </div>
     `;
 
@@ -498,9 +511,10 @@ function renderWorkPage() {
     const customer = document.getElementById('work-customer')?.value || '';
     const fieldFilter = document.getElementById('work-field')?.value || '';
 
-    // Find all vehicles that have at least one non-valid date field
+    // Find all vehicles that have at least one non-valid date field or open deficiencies
     const statusPriority = { expired: 0, critical: 1, warning: 2, valid: 3, empty: 4 };
     const vehicles = [];
+    const defs = loadDeficiencies();
 
     data.forEach(record => {
         if (location && record.location !== location) return;
@@ -520,8 +534,12 @@ function renderWorkPage() {
             }
         });
 
-        if (hasIssue) {
-            vehicles.push({ record, worstStatus: worst, worstPriority: statusPriority[worst] });
+        // Check for open deficiencies
+        const vehicleDefs = defs[record.licenseNumber] || [];
+        const openDefs = vehicleDefs.filter(d => d.status === 'open' || d.status === 'in-progress');
+
+        if (hasIssue || openDefs.length > 0) {
+            vehicles.push({ record, worstStatus: worst, worstPriority: statusPriority[worst], openDefs: openDefs.length });
         }
     });
 
@@ -540,16 +558,16 @@ function renderWorkPage() {
 
     // Group by location → customer
     const grouped = {};
-    vehicles.forEach(({ record }) => {
+    vehicles.forEach(({ record, openDefs }) => {
         const loc = record.location;
         const cust = record.customerName;
         if (!grouped[loc]) grouped[loc] = {};
         if (!grouped[loc][cust]) grouped[loc][cust] = { contact: record.contactName, phone: record.contactPhone, vehicles: [] };
-        grouped[loc][cust].vehicles.push(record);
+        grouped[loc][cust].vehicles.push({ ...record, _openDefs: openDefs });
     });
 
     const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
-    const totalCols = fieldsToShow.length + 4; // customer + vehicle + type + fields + button
+    const totalCols = fieldsToShow.length + 5; // customer + vehicle + type + fields + deficiencies + button
 
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
@@ -562,6 +580,7 @@ function renderWorkPage() {
                 <th>רכב</th>
                 <th>סוג</th>
                 ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
+                <th>ליקויים</th>
                 <th></th>
             </tr></thead>
             <tbody>`;
@@ -609,6 +628,12 @@ function renderWorkPage() {
                         </td>`;
                     }
                 });
+
+                if (rec._openDefs > 0) {
+                    html += `<td class="work-cell work-cell-expired text-center"><div>${rec._openDefs}</div><div class="work-cell-days">פתוחים</div></td>`;
+                } else {
+                    html += `<td class="work-cell work-cell-empty text-center">-</td>`;
+                }
 
                 html += `<td>
                     <button onclick="openEditModal('${rec.licenseNumber}')"
