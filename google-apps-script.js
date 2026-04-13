@@ -6,6 +6,58 @@
 const SHEET_NAME = 'להדפסה';
 const DEF_SHEET_NAME = 'ליקויים';
 
+// ============================================================
+// Migration: Run this ONCE to update sheet columns
+// In Apps Script editor: Run > migrateColumns
+// ============================================================
+
+function migrateColumns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { Logger.log('Sheet not found: ' + SHEET_NAME); return; }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  // Check if migration already done
+  if (headers.includes('יצרן רכב') || headers.includes('manufacturer')) {
+    Logger.log('Migration already applied. Skipping.');
+    return;
+  }
+
+  // Step 1: Add new column headers at the end
+  const newHeaders = ['תסקיר רמפה/מנוף', 'יצרן רכב', 'משקל כולל', 'מספר ק״מ', 'מורשה חומ״ס'];
+  const startCol = lastCol + 1;
+  sheet.getRange(1, startCol, 1, newHeaders.length).setValues([newHeaders]);
+
+  // Step 2: Delete old columns (comprehensiveInsurance=col 7, equipmentExpiry=col 9)
+  // Delete equipmentExpiry first (higher index) so it doesn't shift comprehensiveInsurance
+  const eqIdx = headers.indexOf('ציוד יעודי');
+  const compIdx = headers.indexOf('ביטוח מקיף');
+
+  if (eqIdx === -1 && compIdx === -1) {
+    // Try English header names from old COLS mapping (0-based col 6 and 8 = 1-based col 7 and 9)
+    // comprehensiveInsurance was col index 6, equipmentExpiry was col index 8
+    sheet.deleteColumn(9); // equipmentExpiry (delete higher index first)
+    sheet.deleteColumn(7); // comprehensiveInsurance
+  } else {
+    // Delete by found index (1-based), higher index first
+    const delIndices = [eqIdx, compIdx].filter(i => i !== -1).map(i => i + 1).sort((a, b) => b - a);
+    delIndices.forEach(col => sheet.deleteColumn(col));
+  }
+
+  // Step 3: Rename brakeTestExpiry header
+  const updatedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  for (let i = 0; i < updatedHeaders.length; i++) {
+    if (updatedHeaders[i] === 'בדיקת בלמים') {
+      sheet.getRange(1, i + 1).setValue('אישור בלמים חצי שנתי');
+      break;
+    }
+  }
+
+  Logger.log('Migration complete! New columns added, old columns removed, brakeTestExpiry renamed.');
+}
+
 // Column mapping (0-based index)
 const COLS = {
   customerName: 0,
