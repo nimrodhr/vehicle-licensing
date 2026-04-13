@@ -680,7 +680,7 @@ function openEditModal(licenseNumber) {
 
     let html = `<form id="edit-form" onsubmit="handleSaveEdit(event)">
         <input type="hidden" name="originalLicense" value="${record.licenseNumber}">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="modal-field">
                 <label>שם לקוח</label>
                 <input type="text" name="customerName" value="${record.customerName}" required>
@@ -703,7 +703,7 @@ function openEditModal(licenseNumber) {
         </div>
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
-        <div class="grid grid-cols-2 gap-3">`;
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
 
     dateFieldEntries.forEach(([field, label]) => {
         const status = getDateStatus(record[field]);
@@ -715,7 +715,7 @@ function openEditModal(licenseNumber) {
     });
 
     html += `</div>
-        <div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName" value="${record.contactName}"></div>
             <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone" value="${record.contactPhone}"></div>
         </div>
@@ -813,7 +813,7 @@ function showAddForm() {
     tempDeficiencies = [];
 
     let html = `<form id="add-form" onsubmit="handleAddRecord(event)">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="modal-field"><label>שם לקוח</label><input type="text" name="customerName" required></div>
             <div class="modal-field"><label>מיקום</label><input type="text" name="location" required></div>
             <div class="modal-field"><label>מספר רישוי</label><input type="text" name="licenseNumber" required></div>
@@ -823,7 +823,7 @@ function showAddForm() {
             </div>
         </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="modal-field"><label>תוקף רישוי</label><input type="date" name="licenseExpiry"></div>
             <div class="modal-field"><label>ביטוח חובה</label><input type="date" name="mandatoryInsurance"></div>
             <div class="modal-field"><label>ביטוח מקיף</label><input type="date" name="comprehensiveInsurance"></div>
@@ -833,7 +833,7 @@ function showAddForm() {
             <div class="modal-field"><label>רשיון מוביל</label><input type="date" name="carrierLicense"></div>
             <div class="modal-field"><label>תאריך בדיקה</label><input type="date" name="inspectionDate"></div>
         </div>
-        <div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
             <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone"></div>
         </div>
