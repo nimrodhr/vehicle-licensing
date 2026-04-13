@@ -41,6 +41,25 @@ function migrateColumns() {
   Logger.log('Migration complete! 5 new columns added, brakeTestExpiry renamed. Old columns kept for compatibility.');
 }
 
+function migrateColumns2() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { Logger.log('Sheet not found: ' + SHEET_NAME); return; }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  if (headers.includes('בדיקת חורף')) {
+    Logger.log('Migration 2 already applied. Skipping.');
+    return;
+  }
+
+  const newHeaders = ['בדיקת חורף', 'נחתם רישיון מוביל עד'];
+  sheet.getRange(1, lastCol + 1, 1, newHeaders.length).setValues([newHeaders]);
+
+  Logger.log('Migration 2 complete! Added winterInspection and carrierLicenseSigned columns.');
+}
+
 // Column mapping (0-based index)
 const COLS = {
   customerName: 0,

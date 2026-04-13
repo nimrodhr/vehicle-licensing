@@ -200,6 +200,15 @@ function normalizeStr(s) {
     return (s || '').replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF\u00A0]/g, '').trim().replace(/\s+/g, ' ');
 }
 
+function dateFieldHtml(name, value) {
+    const display = value ? formatDate(value) : '';
+    return `<div style="display:flex;gap:4px;align-items:center">
+        <input type="text" name="${name}" value="${display}" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer;flex:1">
+        <input type="date" value="${value || ''}" style="position:absolute;visibility:hidden;width:0;height:0" onchange="const t=this.previousElementSibling;t.value=this.value?formatDate(this.value):''">
+        <button type="button" onclick="this.parentElement.querySelector('input[name]').value='';this.parentElement.querySelector('input[type=date]').value=''" style="color:#ef4444;font-size:1.2rem;padding:0 6px;cursor:pointer;background:none;border:none" title="נקה תאריך">&times;</button>
+    </div>`;
+}
+
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     const parts = dateStr.split('-');
@@ -872,8 +881,7 @@ function openEditModal(licenseNumber) {
         const displayVal = record[field] ? formatDate(record[field]) : '';
         html += `<div class="modal-field">
             <label>${label} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
-            <input type="text" name="${field}" value="${displayVal}" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer">
-            <input type="date" value="${record[field] || ''}" style="position:absolute;visibility:hidden;width:0;height:0" onchange="const t=this.previousElementSibling;t.value=this.value?formatDate(this.value):''">
+            ${dateFieldHtml(field, record[field])}
         </div>`;
     });
 
@@ -1070,15 +1078,15 @@ function showAddForm() {
         </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>תוקף רישוי</label><input type="text" name="licenseExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>ביטוח חובה</label><input type="text" name="mandatoryInsurance" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>כיול</label><input type="text" name="calibrationExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>אישור בלמים חצי שנתי</label><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>רשיון מוביל</label><input type="text" name="carrierLicense" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>תסקיר רמפה/מנוף</label><input type="text" name="rampCraneInspection" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>בדיקת חורף</label><input type="text" name="winterInspection" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>נחתם רישיון מוביל עד</label><input type="text" name="carrierLicenseSigned" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>תאריך בדיקה</label><input type="text" name="inspectionDate" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
+            <div class="modal-field"><label>תוקף רישוי</label>${dateFieldHtml('licenseExpiry', '')}</div>
+            <div class="modal-field"><label>ביטוח חובה</label>${dateFieldHtml('mandatoryInsurance', '')}</div>
+            <div class="modal-field"><label>כיול</label>${dateFieldHtml('calibrationExpiry', '')}</div>
+            <div class="modal-field"><label>אישור בלמים חצי שנתי</label>${dateFieldHtml('brakeTestExpiry', '')}</div>
+            <div class="modal-field"><label>רשיון מוביל</label>${dateFieldHtml('carrierLicense', '')}</div>
+            <div class="modal-field"><label>תסקיר רמפה/מנוף</label>${dateFieldHtml('rampCraneInspection', '')}</div>
+            <div class="modal-field"><label>בדיקת חורף</label>${dateFieldHtml('winterInspection', '')}</div>
+            <div class="modal-field"><label>נחתם רישיון מוביל עד</label>${dateFieldHtml('carrierLicenseSigned', '')}</div>
+            <div class="modal-field"><label>תאריך בדיקה</label>${dateFieldHtml('inspectionDate', '')}</div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
