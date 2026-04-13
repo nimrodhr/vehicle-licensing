@@ -471,99 +471,66 @@ function renderWorkPage() {
     const customer = document.getElementById('work-customer')?.value || '';
     const fieldFilter = document.getElementById('work-field')?.value || '';
 
-    const alerts = { expired: [], critical: [], warning: [] };
+    // Find all vehicles that have at least one non-valid date field
+    const statusPriority = { expired: 0, critical: 1, warning: 2, valid: 3, empty: 4 };
+    const vehicles = [];
 
     data.forEach(record => {
         if (location && record.location !== location) return;
         if (customer && record.customerName !== customer) return;
 
         const fieldsToCheck = fieldFilter ? [fieldFilter] : DATE_FIELDS;
+        let worst = 'valid';
+        let hasIssue = false;
 
         fieldsToCheck.forEach(field => {
             const val = record[field];
             if (!val) return;
             const status = getDateStatus(val);
             if (status === 'expired' || status === 'critical' || status === 'warning') {
-                alerts[status].push({
-                    record,
-                    field,
-                    fieldLabel: FIELD_LABELS[field],
-                    date: val,
-                    daysLeft: daysUntil(val)
-                });
+                hasIssue = true;
+                if (statusPriority[status] < statusPriority[worst]) worst = status;
             }
         });
+
+        if (hasIssue) {
+            vehicles.push({ record, worstStatus: worst, worstPriority: statusPriority[worst] });
+        }
     });
 
-    Object.values(alerts).forEach(arr => arr.sort((a, b) => a.daysLeft - b.daysLeft));
+    // Sort by worst status priority, then by customer name
+    vehicles.sort((a, b) => a.worstPriority - b.worstPriority || a.record.customerName.localeCompare(b.record.customerName, 'he'));
 
-    let html = '';
-    html += renderWorkSection('expired', 'פג תוקף - חמור!', alerts.expired, 'bg-red-600 text-white');
-    html += renderWorkSection('critical', 'פוקע ב-1-2 ימים', alerts.critical, 'bg-orange-500 text-white');
-    html += renderWorkSection('warning', 'פוקע ב-30 יום הקרובים', alerts.warning, 'bg-yellow-400 text-yellow-900');
-
-    if (!alerts.expired.length && !alerts.critical.length && !alerts.warning.length) {
-        html = `<div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+    if (!vehicles.length) {
+        document.getElementById('work-content').innerHTML = `<div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
             <div class="text-4xl mb-2">&#10003;</div>
             <div class="text-lg font-bold text-green-700">אין התראות!</div>
             <div class="text-sm text-green-600">כל הרישיונות תקינים בטווח הסינון הנוכחי</div>
         </div>`;
+        return;
     }
 
-    document.getElementById('work-content').innerHTML = html;
-}
-
-function renderWorkSection(type, title, items, headerClass) {
-    if (!items.length) return '';
-
-    // Group by location → customer → vehicle (license number)
+    // Group by location → customer
     const grouped = {};
-    items.forEach(item => {
-        const loc = item.record.location;
-        const cust = item.record.customerName;
-        const license = item.record.licenseNumber;
-        const locKey = loc;
-        const custKey = `${loc}|||${cust}`;
-        const vehKey = `${loc}|||${cust}|||${license}`;
-
-        if (!grouped[locKey]) grouped[locKey] = { location: loc, customers: {} };
-        if (!grouped[locKey].customers[custKey]) {
-            grouped[locKey].customers[custKey] = {
-                customer: cust,
-                contact: item.record.contactName,
-                phone: item.record.contactPhone,
-                vehicles: {}
-            };
-        }
-        if (!grouped[locKey].customers[custKey].vehicles[vehKey]) {
-            grouped[locKey].customers[custKey].vehicles[vehKey] = {
-                licenseNumber: license,
-                vehicleType: item.record.vehicleType,
-                record: item.record
-            };
-        }
+    vehicles.forEach(({ record }) => {
+        const loc = record.location;
+        const cust = record.customerName;
+        if (!grouped[loc]) grouped[loc] = {};
+        if (!grouped[loc][cust]) grouped[loc][cust] = { contact: record.contactName, phone: record.contactPhone, vehicles: [] };
+        grouped[loc][cust].vehicles.push(record);
     });
 
-    // Count unique vehicles
-    let vehicleCount = 0;
-    Object.values(grouped).forEach(loc => {
-        Object.values(loc.customers).forEach(cust => {
-            vehicleCount += Object.keys(cust.vehicles).length;
-        });
-    });
-
-    const fieldFilter = document.getElementById('work-field')?.value || '';
     const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
-    const totalCols = fieldsToShow.length + 3; // vehicle + type + fields + button
+    const totalCols = fieldsToShow.length + 4; // customer + vehicle + type + fields + button
 
     let html = `<div class="work-section">
-        <div class="work-section-header ${headerClass}">
-            <span>${title}</span>
-            <span class="text-sm font-normal">${vehicleCount} כלי רכב | ${items.length} פריטים</span>
+        <div class="work-section-header bg-blue-700 text-white">
+            <span>דף עבודה - ${vehicles.length} כלי רכב לטיפול</span>
         </div>
         <div class="table-container">
         <table class="work-table">
             <thead><tr>
+                <th>לקוח</th>
                 <th>רכב</th>
                 <th>סוג</th>
                 ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
@@ -571,28 +538,31 @@ function renderWorkSection(type, title, items, headerClass) {
             </tr></thead>
             <tbody>`;
 
-    // Sort locations
-    const sortedLocations = Object.values(grouped).sort((a, b) =>
-        a.location.localeCompare(b.location, 'he'));
+    const sortedLocations = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
 
-    sortedLocations.forEach(locGroup => {
-        html += `<tr class="work-location-row"><td colspan="${totalCols}">${locGroup.location}</td></tr>`;
+    sortedLocations.forEach(loc => {
+        html += `<tr class="work-location-row"><td colspan="${totalCols}">${loc}</td></tr>`;
 
-        const sortedCustomers = Object.values(locGroup.customers).sort((a, b) =>
-            a.customer.localeCompare(b.customer, 'he'));
+        const sortedCustomers = Object.keys(grouped[loc]).sort((a, b) => a.localeCompare(b, 'he'));
 
-        sortedCustomers.forEach(custGroup => {
-            html += `<tr class="work-customer-row"><td colspan="${totalCols}">
-                ${custGroup.customer}
-                <span class="text-gray-500">(${custGroup.contact} -
-                <a href="tel:${custGroup.phone}" class="text-blue-600">${custGroup.phone}</a>)</span>
-            </td></tr>`;
+        sortedCustomers.forEach(cust => {
+            const custData = grouped[loc][cust];
+            const custVehicles = custData.vehicles;
+            const rowspan = custVehicles.length;
 
-            Object.values(custGroup.vehicles).forEach(vehicle => {
-                const rec = vehicle.record;
-                html += `<tr class="work-vehicle-row">
-                    <td class="font-bold">${vehicle.licenseNumber}</td>
-                    <td class="text-gray-500">${vehicle.vehicleType}</td>`;
+            custVehicles.forEach((rec, idx) => {
+                html += `<tr class="work-vehicle-row">`;
+
+                // Customer cell only on first row, with rowspan
+                if (idx === 0) {
+                    html += `<td class="work-customer-cell" rowspan="${rowspan}">
+                        <div class="font-semibold">${cust}</div>
+                        <div class="text-xs text-gray-500">${custData.contact} - <a href="tel:${custData.phone}" class="text-blue-600">${custData.phone}</a></div>
+                    </td>`;
+                }
+
+                html += `<td class="font-bold">${rec.licenseNumber}</td>
+                    <td class="text-gray-500">${rec.vehicleType}</td>`;
 
                 fieldsToShow.forEach(field => {
                     const val = rec[field];
@@ -613,7 +583,7 @@ function renderWorkSection(type, title, items, headerClass) {
                 });
 
                 html += `<td>
-                    <button onclick="openEditModal('${vehicle.licenseNumber}')"
+                    <button onclick="openEditModal('${rec.licenseNumber}')"
                         class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 whitespace-nowrap">
                         עדכן
                     </button>
@@ -623,7 +593,7 @@ function renderWorkSection(type, title, items, headerClass) {
     });
 
     html += '</tbody></table></div></div>';
-    return html;
+    document.getElementById('work-content').innerHTML = html;
 }
 
 // ============================================================

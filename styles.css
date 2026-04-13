@@ -230,6 +230,13 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
+.work-customer-cell {
+    background-color: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    vertical-align: top;
+    padding: 8px 10px !important;
+}
+
 .work-cell {
     text-align: center;
     border-radius: 4px;
