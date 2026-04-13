@@ -807,7 +807,10 @@ function openEditModal(licenseNumber) {
         const displayVal = record[field] ? formatDate(record[field]) : '';
         html += `<div class="modal-field">
             <label>${label} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
-            <input type="text" name="${field}" value="${displayVal}" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr">
+            <div style="position:relative">
+                <input type="text" name="${field}" value="${displayVal}" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer">
+                <input type="date" value="${record[field] || ''}" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="const t=this.previousElementSibling;t.value=this.value?formatDate(this.value):'';t.name&&0">
+            </div>
         </div>`;
     });
 
@@ -941,14 +944,14 @@ function showAddForm() {
         </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>תוקף רישוי</label><input type="text" name="licenseExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>ביטוח חובה</label><input type="text" name="mandatoryInsurance" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>ביטוח מקיף</label><input type="text" name="comprehensiveInsurance" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>כיול</label><input type="text" name="calibrationExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>ציוד יעודי</label><input type="text" name="equipmentExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>בדיקת בלמים</label><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>רשיון מוביל</label><input type="text" name="carrierLicense" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
-            <div class="modal-field"><label>תאריך בדיקה</label><input type="text" name="inspectionDate" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>תוקף רישוי</label><div style="position:relative"><input type="text" name="licenseExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>ביטוח חובה</label><div style="position:relative"><input type="text" name="mandatoryInsurance" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>ביטוח מקיף</label><div style="position:relative"><input type="text" name="comprehensiveInsurance" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>כיול</label><div style="position:relative"><input type="text" name="calibrationExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>ציוד יעודי</label><div style="position:relative"><input type="text" name="equipmentExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>בדיקת בלמים</label><div style="position:relative"><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>רשיון מוביל</label><div style="position:relative"><input type="text" name="carrierLicense" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
+            <div class="modal-field"><label>תאריך בדיקה</label><div style="position:relative"><input type="text" name="inspectionDate" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
