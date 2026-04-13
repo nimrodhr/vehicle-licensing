@@ -931,6 +931,44 @@ async function toggleAppSync(licenseNumber) {
 }
 
 // ============================================================
+// Customer Autocomplete
+// ============================================================
+
+function getUniqueCustomers() {
+    const data = getData();
+    const map = {};
+    data.forEach(r => {
+        if (r.customerName && !map[r.customerName]) {
+            map[r.customerName] = r.location || '';
+        }
+    });
+    return map;
+}
+
+function showCustomerSuggestions(input) {
+    const dropdown = document.getElementById('customer-suggestions');
+    const val = input.value.trim();
+    if (!val) { dropdown.innerHTML = ''; dropdown.style.display = 'none'; return; }
+    const customers = getUniqueCustomers();
+    const matches = Object.keys(customers).filter(name => name.startsWith(val));
+    if (matches.length === 0 || (matches.length === 1 && matches[0] === val)) {
+        dropdown.innerHTML = ''; dropdown.style.display = 'none'; return;
+    }
+    dropdown.innerHTML = matches.map(name =>
+        `<div class="suggestion-item" onmousedown="selectCustomer('${name.replace(/'/g, "\\'")}', '${(customers[name] || '').replace(/'/g, "\\'")}')">${name}</div>`
+    ).join('');
+    dropdown.style.display = 'block';
+}
+
+function selectCustomer(name, location) {
+    const form = document.getElementById('add-form');
+    form.elements.customerName.value = name;
+    if (location) form.elements.location.value = location;
+    const dropdown = document.getElementById('customer-suggestions');
+    dropdown.innerHTML = ''; dropdown.style.display = 'none';
+}
+
+// ============================================================
 // Add New Record
 // ============================================================
 
@@ -940,7 +978,7 @@ function showAddForm() {
 
     let html = `<form id="add-form" onsubmit="handleAddRecord(event)">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>שם לקוח</label><input type="text" name="customerName" required></div>
+            <div class="modal-field" style="position:relative"><label>שם לקוח</label><input type="text" name="customerName" required autocomplete="off" oninput="showCustomerSuggestions(this)"><div id="customer-suggestions" class="suggestions-dropdown"></div></div>
             <div class="modal-field"><label>מיקום</label><input type="text" name="location" required></div>
             <div class="modal-field"><label>מספר רישוי</label><input type="text" name="licenseNumber" required></div>
             <div class="modal-field">
