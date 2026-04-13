@@ -446,7 +446,7 @@ function toggleCustomerExpand(row, customerName) {
             <td class="date-${getDateStatus(v.brakeTestExpiry)}">${formatDate(v.brakeTestExpiry)}</td>
             <td class="date-${getDateStatus(v.carrierLicense)}">${formatDate(v.carrierLicense)}</td>
             <td>${formatDate(v.inspectionDate)}</td>
-            <td><button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="text-blue-600 hover:underline text-xs">עריכה</button></td>
+            <td><button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button></td>
         </tr>`;
     });
 
@@ -580,7 +580,7 @@ function renderWorkPage() {
 
                 html += `<td>
                     <button onclick="openEditModal('${rec.licenseNumber}')"
-                        class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 whitespace-nowrap">
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">
                         עדכן
                     </button>
                 </td></tr>`;
@@ -639,8 +639,8 @@ function renderManagePage() {
                 ${defCount > 0 ? `<span class="badge status-expired">${defCount}</span>` : '<span class="text-gray-400">0</span>'}
             </td>
             <td>
-                <button onclick="openEditModal('${r.licenseNumber}')" class="text-blue-600 hover:underline text-xs ml-2">עריכה</button>
-                <button onclick="confirmDelete('${r.licenseNumber}')" class="text-red-600 hover:underline text-xs">מחיקה</button>
+                <button onclick="openEditModal('${r.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button>
+                <button onclick="confirmDelete('${r.licenseNumber}')" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm hover:bg-red-200">מחיקה</button>
             </td>
         </tr>`;
     });
@@ -722,11 +722,11 @@ function openEditModal(licenseNumber) {
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">ליקויים</h4>
         <div id="deficiencies-list">${tempDeficiencies.map((d, i) => renderDeficiencyItem(d, i)).join('')}</div>
-        <button type="button" onclick="addDeficiency()" class="text-blue-600 text-sm mt-2 hover:underline">+ הוסף ליקוי</button>
+        <button type="button" onclick="addDeficiency()" class="text-blue-600 text-base mt-2 py-2 hover:underline font-medium">+ הוסף ליקוי</button>
 
         <div class="flex gap-3 mt-4 pt-3 border-t">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">שמור שינויים</button>
-            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium">ביטול</button>
+            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-base">שמור שינויים</button>
+            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">ביטול</button>
         </div>
     </form>`;
 
@@ -744,7 +744,7 @@ function renderDeficiencyItem(def, index) {
             <option value="in-progress" ${def.status === 'in-progress' ? 'selected' : ''}>בטיפול</option>
             <option value="resolved" ${def.status === 'resolved' ? 'selected' : ''}>טופל</option>
         </select>
-        <button type="button" onclick="removeDeficiency(${index})" class="text-red-500 hover:text-red-700 text-lg px-1">&times;</button>
+        <button type="button" onclick="removeDeficiency(${index})" class="text-red-500 hover:text-red-700 text-2xl px-2 py-1">&times;</button>
     </div>`;
 }
 
@@ -838,8 +838,8 @@ function showAddForm() {
             <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone"></div>
         </div>
         <div class="flex gap-3 mt-4 pt-3 border-t">
-            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium">הוסף</button>
-            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium">ביטול</button>
+            <button type="submit" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-medium text-base">הוסף</button>
+            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">ביטול</button>
         </div>
     </form>`;
 
@@ -936,8 +936,8 @@ function showSettings() {
             <p class="text-xs text-gray-500 mt-1">הכתובת שמקבלים אחרי Deploy של ה-Apps Script</p>
         </div>
         <div class="flex gap-3 mt-4">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">שמור וחבר</button>
-            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium">ביטול</button>
+            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-base">שמור וחבר</button>
+            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">ביטול</button>
         </div>
     </form>`;
 
