@@ -87,50 +87,52 @@ function loadDeficiencies() {
 // ============================================================
 
 async function saveRecord(record) {
-    showLoading(true);
+    // Update local cache immediately for fast UI
+    const idx = _vehicleData.findIndex(r => r.licenseNumber === record.licenseNumber);
+    if (idx !== -1) {
+        Object.assign(_vehicleData[idx], record);
+        _vehicleData[idx].id = record.licenseNumber;
+    }
+
     try {
         const result = await apiAction('updateRecord', { data: JSON.stringify(record) });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('נשמר בהצלחה ב-Google Sheets');
-        await loadAllData();
         return true;
     } catch (err) {
         showSaveIndicator('שגיאה בשמירה: ' + err.message, true);
         return false;
-    } finally {
-        showLoading(false);
     }
 }
 
 async function addNewRecord(record) {
-    showLoading(true);
+    // Add to local cache immediately
+    record.id = record.licenseNumber;
+    _vehicleData.push(record);
+
     try {
         const result = await apiAction('addRecord', { data: JSON.stringify(record) });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('רשומה חדשה נוספה');
-        await loadAllData();
         return true;
     } catch (err) {
         showSaveIndicator('שגיאה בהוספה: ' + err.message, true);
         return false;
-    } finally {
-        showLoading(false);
     }
 }
 
 async function deleteRecord(licenseNumber) {
-    showLoading(true);
+    // Remove from local cache immediately
+    _vehicleData = _vehicleData.filter(r => r.licenseNumber !== licenseNumber);
+
     try {
         const result = await apiAction('deleteRecord', { licenseNumber });
         if (result.error) throw new Error(result.error);
         showSaveIndicator('רשומה נמחקה');
-        await loadAllData();
         return true;
     } catch (err) {
         showSaveIndicator('שגיאה במחיקה: ' + err.message, true);
         return false;
-    } finally {
-        showLoading(false);
     }
 }
 
@@ -296,6 +298,14 @@ function populateFilters() {
 // Dashboard Page
 // ============================================================
 
+function clearDashFilters() {
+    document.getElementById('dash-status').value = '';
+    document.getElementById('dash-search').value = '';
+    document.getElementById('dash-location').value = '';
+    document.getElementById('dash-type').value = '';
+    renderDashboard();
+}
+
 function renderDashboard() {
     const data = getData();
     const search = document.getElementById('dash-search')?.value?.toLowerCase() || '';
@@ -315,6 +325,7 @@ function renderDashboard() {
     });
 
     // Summary cards
+    const uniqueCustomers = new Set(data.map(r => r.customerName)).size;
     let expired = 0, critical = 0, warning = 0, valid = 0;
     data.forEach(r => {
         const s = getRecordWorstStatus(r);
@@ -324,10 +335,19 @@ function renderDashboard() {
         else valid++;
     });
 
+    function clearFilters() {
+        document.getElementById('dash-status').value='';
+        document.getElementById('dash-search').value='';
+        document.getElementById('dash-location').value='';
+        document.getElementById('dash-type').value='';
+        renderDashboard();
+    }
+
     document.getElementById('summary-cards').innerHTML = `
-        <div class="summary-card bg-white border-r-4 border-blue-500">
+        <div class="summary-card bg-white border-r-4 border-blue-500 cursor-pointer" onclick="clearFilters()">
             <div class="text-3xl font-bold text-blue-600">${data.length}</div>
             <div class="text-sm text-gray-600">סה"כ כלי רכב</div>
+            <div class="text-xs text-gray-400 mt-1">${uniqueCustomers} לקוחות</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-red-500 cursor-pointer" onclick="document.getElementById('dash-status').value='expired';renderDashboard()">
             <div class="text-3xl font-bold text-red-600">${expired}</div>
@@ -336,6 +356,7 @@ function renderDashboard() {
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='warning';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${warning + critical}</div>
             <div class="text-sm text-gray-600">קרובים לפקיעה</div>
+            <div class="text-xs text-gray-400 mt-1">${critical} עד יומיים | ${warning} עד 30 יום</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
@@ -490,58 +511,88 @@ function renderWorkPage() {
 function renderWorkSection(type, title, items, headerClass) {
     if (!items.length) return '';
 
+    // Group by location → customer → vehicle (license number)
     const grouped = {};
     items.forEach(item => {
         const loc = item.record.location;
         const cust = item.record.customerName;
-        const key = `${loc}|||${cust}`;
-        if (!grouped[key]) grouped[key] = { location: loc, customer: cust, items: [] };
-        grouped[key].items.push(item);
+        const license = item.record.licenseNumber;
+        const locKey = loc;
+        const custKey = `${loc}|||${cust}`;
+        const vehKey = `${loc}|||${cust}|||${license}`;
+
+        if (!grouped[locKey]) grouped[locKey] = { location: loc, customers: {} };
+        if (!grouped[locKey].customers[custKey]) {
+            grouped[locKey].customers[custKey] = {
+                customer: cust,
+                contact: item.record.contactName,
+                phone: item.record.contactPhone,
+                vehicles: {}
+            };
+        }
+        if (!grouped[locKey].customers[custKey].vehicles[vehKey]) {
+            grouped[locKey].customers[custKey].vehicles[vehKey] = {
+                licenseNumber: license,
+                vehicleType: item.record.vehicleType,
+                alerts: []
+            };
+        }
+        grouped[locKey].customers[custKey].vehicles[vehKey].alerts.push(item);
+    });
+
+    // Count unique vehicles
+    let vehicleCount = 0;
+    Object.values(grouped).forEach(loc => {
+        Object.values(loc.customers).forEach(cust => {
+            vehicleCount += Object.keys(cust.vehicles).length;
+        });
     });
 
     let html = `<div class="work-section">
         <div class="work-section-header ${headerClass}">
             <span>${title}</span>
-            <span class="text-sm font-normal">${items.length} פריטים</span>
+            <span class="text-sm font-normal">${vehicleCount} כלי רכב | ${items.length} פריטים</span>
         </div>`;
 
-    const sortedGroups = Object.values(grouped).sort((a, b) =>
-        a.location.localeCompare(b.location, 'he') || a.customer.localeCompare(b.customer, 'he'));
+    // Sort locations
+    const sortedLocations = Object.values(grouped).sort((a, b) =>
+        a.location.localeCompare(b.location, 'he'));
 
-    let lastLocation = '';
-    sortedGroups.forEach(group => {
-        if (group.location !== lastLocation) {
-            html += `<div class="location-group">${group.location}</div>`;
-            lastLocation = group.location;
-        }
+    sortedLocations.forEach(locGroup => {
+        html += `<div class="location-group">${locGroup.location}</div>`;
 
-        html += `<div class="bg-gray-50 px-4 py-1 text-sm font-medium border-b border-gray-200">
-            ${group.customer}
-            <span class="text-gray-500">(${group.items[0].record.contactName} -
-            <a href="tel:${group.items[0].record.contactPhone}" class="text-blue-600">${group.items[0].record.contactPhone}</a>)</span>
-        </div>`;
+        const sortedCustomers = Object.values(locGroup.customers).sort((a, b) =>
+            a.customer.localeCompare(b.customer, 'he'));
 
-        group.items.forEach(item => {
-            const daysText = item.daysLeft < 0
-                ? `פג לפני ${Math.abs(item.daysLeft)} ימים`
-                : item.daysLeft === 0 ? 'פג היום!'
-                : `${item.daysLeft} ימים`;
+        sortedCustomers.forEach(custGroup => {
+            html += `<div class="bg-gray-50 px-4 py-1 text-sm font-medium border-b border-gray-200">
+                ${custGroup.customer}
+                <span class="text-gray-500">(${custGroup.contact} -
+                <a href="tel:${custGroup.phone}" class="text-blue-600">${custGroup.phone}</a>)</span>
+            </div>`;
 
-            html += `<div class="work-card">
-                <div>
-                    <span class="font-medium">${item.record.licenseNumber}</span>
-                    <span class="text-gray-500 text-xs mr-2">${item.record.vehicleType}</span>
-                </div>
-                <div class="font-medium">${item.fieldLabel}</div>
-                <div class="date-${type}">${formatDate(item.date)}</div>
-                <div class="badge status-${type}">${daysText}</div>
-                <div>
-                    <button onclick="openEditModal('${item.record.licenseNumber}')"
-                        class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+            // Each vehicle with its alerts
+            Object.values(custGroup.vehicles).forEach(vehicle => {
+                const alertTags = vehicle.alerts.map(a => {
+                    const daysText = a.daysLeft < 0
+                        ? `פג לפני ${Math.abs(a.daysLeft)} ימים`
+                        : a.daysLeft === 0 ? 'פג היום!'
+                        : `${a.daysLeft} ימים`;
+                    return `<span class="badge status-${type} ml-1">${a.fieldLabel}: ${formatDate(a.date)} (${daysText})</span>`;
+                }).join('');
+
+                html += `<div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between gap-2 hover:bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-sm">${vehicle.licenseNumber}</span>
+                        <span class="text-gray-500 text-xs">${vehicle.vehicleType}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 flex-1 justify-start mr-4">${alertTags}</div>
+                    <button onclick="openEditModal('${vehicle.licenseNumber}')"
+                        class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 whitespace-nowrap">
                         עדכן
                     </button>
-                </div>
-            </div>`;
+                </div>`;
+            });
         });
     });
 
