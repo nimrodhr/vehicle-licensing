@@ -54,16 +54,18 @@ async function apiAction(action, params) {
 async function loadAllData() {
     showLoading(true);
     try {
-        const [vehicleResp, defResp] = await Promise.all([
+        const [vehicleResp, defResp, sheetNameResp] = await Promise.all([
             apiGet('getData'),
-            apiGet('getDeficiencies')
+            apiGet('getDeficiencies'),
+            apiGet('getSheetName')
         ]);
 
         if (vehicleResp.error) throw new Error(vehicleResp.error);
         _vehicleData = vehicleResp.data || [];
         _deficiencyData = (defResp.data) || {};
 
-        showStatus('מחובר ל-Google Sheets', false);
+        const sheetName = sheetNameResp && sheetNameResp.name ? sheetNameResp.name : 'Google Sheets';
+        showStatus(`מחובר ל-${sheetName}`, false);
         return true;
     } catch (err) {
         console.error('Load error:', err);
@@ -351,11 +353,11 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-red-500 cursor-pointer" onclick="document.getElementById('dash-status').value='expired';renderDashboard()">
             <div class="text-3xl font-bold text-red-600">${expired}</div>
-            <div class="text-sm text-gray-600">פגי תוקף</div>
+            <div class="text-sm text-gray-600">כלי רכב פגי תוקף</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='critical';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${critical}</div>
-            <div class="text-sm text-gray-600">פוקעים ביומיים</div>
+            <div class="text-sm text-gray-600">כלי רכב פוקעים ביומיים הקרובים</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-yellow-500 cursor-pointer" onclick="document.getElementById('dash-status').value='warning';renderDashboard()">
             <div class="text-3xl font-bold text-yellow-600">${warning}</div>
@@ -363,7 +365,7 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
-            <div class="text-sm text-gray-600">תקינים</div>
+            <div class="text-sm text-gray-600">כלי רכב תקינים</div>
         </div>
     `;
 
@@ -966,7 +968,6 @@ async function saveSettings(event) {
     const success = await loadAllData();
     if (success) {
         document.getElementById('setup-banner').classList.add('hidden');
-        showStatus('מחובר ל-Google Sheets', false);
         populateFilters();
         renderCurrentPage();
     } else {
