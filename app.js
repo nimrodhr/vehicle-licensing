@@ -539,10 +539,9 @@ function renderWorkSection(type, title, items, headerClass) {
             grouped[locKey].customers[custKey].vehicles[vehKey] = {
                 licenseNumber: license,
                 vehicleType: item.record.vehicleType,
-                alerts: []
+                record: item.record
             };
         }
-        grouped[locKey].customers[custKey].vehicles[vehKey].alerts.push(item);
     });
 
     // Count unique vehicles
@@ -553,55 +552,77 @@ function renderWorkSection(type, title, items, headerClass) {
         });
     });
 
+    const fieldFilter = document.getElementById('work-field')?.value || '';
+    const fieldsToShow = fieldFilter ? [fieldFilter] : DATE_FIELDS;
+    const totalCols = fieldsToShow.length + 3; // vehicle + type + fields + button
+
     let html = `<div class="work-section">
         <div class="work-section-header ${headerClass}">
             <span>${title}</span>
             <span class="text-sm font-normal">${vehicleCount} כלי רכב | ${items.length} פריטים</span>
-        </div>`;
+        </div>
+        <div class="table-container">
+        <table class="work-table">
+            <thead><tr>
+                <th>רכב</th>
+                <th>סוג</th>
+                ${fieldsToShow.map(f => `<th>${FIELD_LABELS[f]}</th>`).join('')}
+                <th></th>
+            </tr></thead>
+            <tbody>`;
 
     // Sort locations
     const sortedLocations = Object.values(grouped).sort((a, b) =>
         a.location.localeCompare(b.location, 'he'));
 
     sortedLocations.forEach(locGroup => {
-        html += `<div class="location-group">${locGroup.location}</div>`;
+        html += `<tr class="work-location-row"><td colspan="${totalCols}">${locGroup.location}</td></tr>`;
 
         const sortedCustomers = Object.values(locGroup.customers).sort((a, b) =>
             a.customer.localeCompare(b.customer, 'he'));
 
         sortedCustomers.forEach(custGroup => {
-            html += `<div class="bg-gray-50 px-4 py-1 text-sm font-medium border-b border-gray-200">
+            html += `<tr class="work-customer-row"><td colspan="${totalCols}">
                 ${custGroup.customer}
                 <span class="text-gray-500">(${custGroup.contact} -
                 <a href="tel:${custGroup.phone}" class="text-blue-600">${custGroup.phone}</a>)</span>
-            </div>`;
+            </td></tr>`;
 
-            // Each vehicle with its alerts
             Object.values(custGroup.vehicles).forEach(vehicle => {
-                const alertTags = vehicle.alerts.map(a => {
-                    const daysText = a.daysLeft < 0
-                        ? `פג לפני ${Math.abs(a.daysLeft)} ימים`
-                        : a.daysLeft === 0 ? 'פג היום!'
-                        : `${a.daysLeft} ימים`;
-                    return `<span class="badge status-${type} ml-1">${a.fieldLabel}: ${formatDate(a.date)} (${daysText})</span>`;
-                }).join('');
+                const rec = vehicle.record;
+                html += `<tr class="work-vehicle-row">
+                    <td class="font-bold">${vehicle.licenseNumber}</td>
+                    <td class="text-gray-500">${vehicle.vehicleType}</td>`;
 
-                html += `<div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between gap-2 hover:bg-gray-50">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-sm">${vehicle.licenseNumber}</span>
-                        <span class="text-gray-500 text-xs">${vehicle.vehicleType}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1 flex-1 justify-start mr-4">${alertTags}</div>
+                fieldsToShow.forEach(field => {
+                    const val = rec[field];
+                    const status = getDateStatus(val);
+                    if (!val) {
+                        html += `<td class="work-cell work-cell-empty">-</td>`;
+                    } else {
+                        const days = daysUntil(val);
+                        const daysText = days < 0
+                            ? `פג לפני ${Math.abs(days)} ימים`
+                            : days === 0 ? 'פג היום!'
+                            : `עוד ${days} ימים`;
+                        html += `<td class="work-cell work-cell-${status}">
+                            <div>${formatDate(val)}</div>
+                            <div class="work-cell-days">${daysText}</div>
+                        </td>`;
+                    }
+                });
+
+                html += `<td>
                     <button onclick="openEditModal('${vehicle.licenseNumber}')"
                         class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 whitespace-nowrap">
                         עדכן
                     </button>
-                </div>`;
+                </td></tr>`;
             });
         });
     });
 
-    html += '</div>';
+    html += '</tbody></table></div></div>';
     return html;
 }
 
