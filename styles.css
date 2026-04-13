@@ -368,8 +368,11 @@
 
 /* License status badges */
 .license-badges-cell {
-    max-width: 140px;
+    max-width: 200px;
+    min-width: 120px;
     line-height: 1.4;
+    white-space: normal !important;
+    text-align: right;
 }
 
 .license-badge {
