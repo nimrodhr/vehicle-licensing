@@ -25,37 +25,20 @@ function migrateColumns() {
     return;
   }
 
-  // Step 1: Add new column headers at the end
+  // Add new column headers at end (after appSynced which is col 15)
   const newHeaders = ['תסקיר רמפה/מנוף', 'יצרן רכב', 'משקל כולל', 'מספר ק״מ', 'מורשה חומ״ס'];
   const startCol = lastCol + 1;
   sheet.getRange(1, startCol, 1, newHeaders.length).setValues([newHeaders]);
 
-  // Step 2: Delete old columns (comprehensiveInsurance=col 7, equipmentExpiry=col 9)
-  // Delete equipmentExpiry first (higher index) so it doesn't shift comprehensiveInsurance
-  const eqIdx = headers.indexOf('ציוד יעודי');
-  const compIdx = headers.indexOf('ביטוח מקיף');
-
-  if (eqIdx === -1 && compIdx === -1) {
-    // Try English header names from old COLS mapping (0-based col 6 and 8 = 1-based col 7 and 9)
-    // comprehensiveInsurance was col index 6, equipmentExpiry was col index 8
-    sheet.deleteColumn(9); // equipmentExpiry (delete higher index first)
-    sheet.deleteColumn(7); // comprehensiveInsurance
-  } else {
-    // Delete by found index (1-based), higher index first
-    const delIndices = [eqIdx, compIdx].filter(i => i !== -1).map(i => i + 1).sort((a, b) => b - a);
-    delIndices.forEach(col => sheet.deleteColumn(col));
-  }
-
-  // Step 3: Rename brakeTestExpiry header
-  const updatedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  for (let i = 0; i < updatedHeaders.length; i++) {
-    if (updatedHeaders[i] === 'בדיקת בלמים') {
+  // Rename brakeTestExpiry header
+  for (let i = 0; i < headers.length; i++) {
+    if (headers[i] === 'בדיקת בלמים') {
       sheet.getRange(1, i + 1).setValue('אישור בלמים חצי שנתי');
       break;
     }
   }
 
-  Logger.log('Migration complete! New columns added, old columns removed, brakeTestExpiry renamed.');
+  Logger.log('Migration complete! 5 new columns added, brakeTestExpiry renamed. Old columns kept for compatibility.');
 }
 
 // Column mapping (0-based index)
@@ -66,18 +49,20 @@ const COLS = {
   vehicleType: 3,
   licenseExpiry: 4,
   mandatoryInsurance: 5,
-  calibrationExpiry: 6,
-  brakeTestExpiry: 7,
-  carrierLicense: 8,
-  rampCraneInspection: 9,
-  inspectionDate: 10,
-  contactName: 11,
-  contactPhone: 12,
-  appSynced: 13,
-  manufacturer: 14,
-  totalWeight: 15,
-  mileage: 16,
-  hazmatCertified: 17
+  comprehensiveInsurance: 6, // legacy - kept for Sheet compatibility
+  calibrationExpiry: 7,
+  equipmentExpiry: 8,        // legacy - kept for Sheet compatibility
+  brakeTestExpiry: 9,
+  carrierLicense: 10,
+  inspectionDate: 11,
+  contactName: 12,
+  contactPhone: 13,
+  appSynced: 14,
+  rampCraneInspection: 15,
+  manufacturer: 16,
+  totalWeight: 17,
+  mileage: 18,
+  hazmatCertified: 19
 };
 
 // ============================================================
@@ -194,11 +179,11 @@ function getAllVehicles() {
       calibrationExpiry: formatDateValue(row[COLS.calibrationExpiry]),
       brakeTestExpiry: formatDateValue(row[COLS.brakeTestExpiry]),
       carrierLicense: formatDateValue(row[COLS.carrierLicense]),
-      rampCraneInspection: formatDateValue(row[COLS.rampCraneInspection]),
       inspectionDate: formatDateValue(row[COLS.inspectionDate]),
       contactName: String(row[COLS.contactName] || ''),
       contactPhone: String(row[COLS.contactPhone] || ''),
       appSynced: String(row[COLS.appSynced] || ''),
+      rampCraneInspection: formatDateValue(row[COLS.rampCraneInspection]),
       manufacturer: String(row[COLS.manufacturer] || ''),
       totalWeight: String(row[COLS.totalWeight] || ''),
       mileage: String(row[COLS.mileage] || ''),
@@ -232,14 +217,16 @@ function updateVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
+    '',  // comprehensiveInsurance - legacy column
     parseDateString(record.calibrationExpiry),
+    '',  // equipmentExpiry - legacy column
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
-    parseDateString(record.rampCraneInspection),
     parseDateString(record.inspectionDate),
     record.contactName || '',
     record.contactPhone || '',
     record.appSynced || '',
+    parseDateString(record.rampCraneInspection),
     record.manufacturer || '',
     record.totalWeight || '',
     record.mileage || '',
@@ -275,14 +262,16 @@ function addVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
+    '',  // comprehensiveInsurance - legacy column
     parseDateString(record.calibrationExpiry),
+    '',  // equipmentExpiry - legacy column
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
-    parseDateString(record.rampCraneInspection),
     parseDateString(record.inspectionDate),
     record.contactName || '',
     record.contactPhone || '',
     '',
+    parseDateString(record.rampCraneInspection),
     record.manufacturer || '',
     record.totalWeight || '',
     record.mileage || '',
