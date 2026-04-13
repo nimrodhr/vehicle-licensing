@@ -416,7 +416,7 @@ function renderDashboard() {
             <div class="text-sm text-gray-600">ליקויים פתוחים</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-amber-500">
-            <div class="text-3xl font-bold text-amber-600">${data.filter(r => r.appSynced === 'no').length}</div>
+            <div class="text-3xl font-bold text-amber-600">${data.filter(r => r.appSynced !== 'yes').length}</div>
             <div class="text-sm text-gray-600">ממתינים לעדכון במערכת</div>
         </div>
     `;
@@ -533,7 +533,7 @@ function renderWorkPage() {
     data.forEach(record => {
         if (location && record.location !== location) return;
         if (customer && record.customerName !== customer) return;
-        if (syncFilter === 'no' && record.appSynced !== 'no') return;
+        if (syncFilter === 'no' && record.appSynced === 'yes') return;
         if (syncFilter === 'yes' && record.appSynced !== 'yes') return;
 
         const vehicleDefs = defs[record.licenseNumber] || [];
