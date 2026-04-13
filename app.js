@@ -196,7 +196,7 @@ function getRecordWorstStatus(record) {
 }
 
 function normalizeStr(s) {
-    return (s || '').trim().replace(/\s+/g, ' ');
+    return (s || '').replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF\u00A0]/g, '').trim().replace(/\s+/g, ' ');
 }
 
 function formatDate(dateStr) {
