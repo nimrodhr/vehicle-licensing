@@ -364,8 +364,20 @@ function renderDashboard() {
         if (location && normalizeStr(r.location) !== location) return false;
         if (vType && r.vehicleType !== vType) return false;
         if (statusFilter) {
-            const worst = getRecordWorstStatus(r);
-            if (statusFilter !== worst) return false;
+            if (statusFilter === 'notVisited') {
+                const monthStart = today().slice(0, 7) + '-01';
+                if (r.inspectionDate && r.inspectionDate >= monthStart) return false;
+            } else if (statusFilter === 'openDefs') {
+                const defs = loadDeficiencies();
+                const vehicleDefs = defs[r.licenseNumber] || [];
+                const hasOpen = vehicleDefs.some(d => d.status === 'open' || d.status === 'in-progress');
+                if (!hasOpen) return false;
+            } else if (statusFilter === 'pendingSync') {
+                if (r.appSynced === 'yes') return false;
+            } else {
+                const worst = getRecordWorstStatus(r);
+                if (statusFilter !== worst) return false;
+            }
         }
         return true;
     });
@@ -405,7 +417,7 @@ function renderDashboard() {
             <div class="text-sm text-gray-600">סה"כ כלי רכב</div>
             <div class="text-xs text-gray-400 mt-1">${uniqueCustomers} לקוחות</div>
         </div>
-        <div class="summary-card bg-white border-r-4 border-cyan-600">
+        <div class="summary-card bg-white border-r-4 border-cyan-600 cursor-pointer" onclick="document.getElementById('dash-status').value='notVisited';renderDashboard()">
             <div class="text-3xl font-bold text-cyan-700">${notVisited}</div>
             <div class="text-sm text-gray-600">נותרו לביקור החודש</div>
         </div>
@@ -425,11 +437,11 @@ function renderDashboard() {
             <div class="text-3xl font-bold text-green-600">${valid}</div>
             <div class="text-sm text-gray-600">רכבים תקינים</div>
         </div>
-        <div class="summary-card bg-white border-r-4 border-purple-500">
+        <div class="summary-card bg-white border-r-4 border-purple-500 cursor-pointer" onclick="document.getElementById('dash-status').value='openDefs';renderDashboard()">
             <div class="text-3xl font-bold text-purple-600">${openDefs}</div>
             <div class="text-sm text-gray-600">ליקויים פתוחים</div>
         </div>
-        <div class="summary-card bg-white border-r-4 border-amber-500">
+        <div class="summary-card bg-white border-r-4 border-amber-500 cursor-pointer" onclick="document.getElementById('dash-status').value='pendingSync';renderDashboard()">
             <div class="text-3xl font-bold text-amber-600">${data.filter(r => r.appSynced !== 'yes').length}</div>
             <div class="text-sm text-gray-600">ממתינים לעדכון במערכת</div>
         </div>
