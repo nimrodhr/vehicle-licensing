@@ -356,7 +356,7 @@ function renderDashboard() {
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='warning';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${warning + critical}</div>
             <div class="text-sm text-gray-600">קרובים לפקיעה</div>
-            <div class="text-xs text-gray-400 mt-1">${critical} עד יומיים | ${warning} עד 30 יום</div>
+            <div class="text-xs text-gray-400 mt-1">${critical} פוקעים ביומיים | ${warning} פוקעים ב-30 יום</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
