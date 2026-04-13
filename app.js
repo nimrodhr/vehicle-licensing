@@ -547,7 +547,10 @@ function renderWorkPage() {
     data.forEach(record => {
         if (location && normalizeStr(record.location) !== location) return;
         if (customer && normalizeStr(record.customerName) !== customer) {
-            console.log('FILTER MISMATCH:', JSON.stringify(Array.from(record.customerName)).toString(), 'vs', JSON.stringify(Array.from(customer)).toString());
+            const a = normalizeStr(record.customerName), b = customer;
+            const codes1 = [...a].map(c => c.charCodeAt(0).toString(16)).join(' ');
+            const codes2 = [...b].map(c => c.charCodeAt(0).toString(16)).join(' ');
+            console.log('MISMATCH:', record.licenseNumber, '|', a, '→', codes1, '| vs |', b, '→', codes2);
             return;
         }
         if (syncFilter === 'no' && record.appSynced === 'yes') return;
