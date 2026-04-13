@@ -49,20 +49,18 @@ const COLS = {
   vehicleType: 3,
   licenseExpiry: 4,
   mandatoryInsurance: 5,
-  comprehensiveInsurance: 6, // legacy - kept for Sheet compatibility
-  calibrationExpiry: 7,
-  equipmentExpiry: 8,        // legacy - kept for Sheet compatibility
-  brakeTestExpiry: 9,
-  carrierLicense: 10,
-  inspectionDate: 11,
-  contactName: 12,
-  contactPhone: 13,
-  appSynced: 14,
-  rampCraneInspection: 15,
-  manufacturer: 16,
-  totalWeight: 17,
-  mileage: 18,
-  hazmatCertified: 19
+  calibrationExpiry: 6,
+  brakeTestExpiry: 7,
+  carrierLicense: 8,
+  inspectionDate: 9,
+  contactName: 10,
+  contactPhone: 11,
+  appSynced: 12,
+  rampCraneInspection: 13,
+  manufacturer: 14,
+  totalWeight: 15,
+  mileage: 16,
+  hazmatCertified: 17
 };
 
 // ============================================================
@@ -217,9 +215,7 @@ function updateVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
-    '',  // comprehensiveInsurance - legacy column
     parseDateString(record.calibrationExpiry),
-    '',  // equipmentExpiry - legacy column
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
     parseDateString(record.inspectionDate),
@@ -262,9 +258,7 @@ function addVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
-    '',  // comprehensiveInsurance - legacy column
     parseDateString(record.calibrationExpiry),
-    '',  // equipmentExpiry - legacy column
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
     parseDateString(record.inspectionDate),
