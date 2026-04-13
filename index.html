@@ -132,7 +132,7 @@
         <!-- Work Page -->
         <div id="page-work" class="page hidden">
             <div class="bg-white rounded-lg shadow p-3 mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">מיקום</label>
                         <select id="work-location" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderWorkPage()">
@@ -156,6 +156,14 @@
                             <option value="equipmentExpiry">ציוד יעודי</option>
                             <option value="brakeTestExpiry">בדיקת בלמים</option>
                             <option value="carrierLicense">רשיון מוביל</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">עדכון במערכת</label>
+                        <select id="work-sync" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderWorkPage()">
+                            <option value="">הכל</option>
+                            <option value="no">לא עודכן</option>
+                            <option value="yes">עודכן</option>
                         </select>
                     </div>
                 </div>
