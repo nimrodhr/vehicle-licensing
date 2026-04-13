@@ -199,6 +199,13 @@ function formatDate(dateStr) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+function parseDateInput(val) {
+    if (!val) return '';
+    const parts = val.split('/');
+    if (parts.length !== 3) return val;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
 function statusLabel(status) {
     const labels = {
         expired: 'פג תוקף',
@@ -797,9 +804,10 @@ function openEditModal(licenseNumber) {
     dateFieldEntries.forEach(([field, label]) => {
         const status = getDateStatus(record[field]);
         const statusClass = field !== 'inspectionDate' ? `date-${status}` : '';
+        const displayVal = record[field] ? formatDate(record[field]) : '';
         html += `<div class="modal-field">
             <label>${label} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
-            <input type="date" name="${field}" value="${record[field] || ''}">
+            <input type="text" name="${field}" value="${displayVal}" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr">
         </div>`;
     });
 
@@ -868,17 +876,17 @@ async function handleSaveEdit(event) {
         location: form.elements.location.value,
         licenseNumber: form.elements.originalLicense.value, // original license to find row
         vehicleType: form.elements.vehicleType.value,
-        licenseExpiry: form.elements.licenseExpiry.value,
-        mandatoryInsurance: form.elements.mandatoryInsurance.value,
-        comprehensiveInsurance: form.elements.comprehensiveInsurance.value,
-        calibrationExpiry: form.elements.calibrationExpiry.value,
-        equipmentExpiry: form.elements.equipmentExpiry.value,
-        brakeTestExpiry: form.elements.brakeTestExpiry.value,
-        carrierLicense: form.elements.carrierLicense.value,
-        inspectionDate: form.elements.inspectionDate.value,
+        licenseExpiry: parseDateInput(form.elements.licenseExpiry.value),
+        mandatoryInsurance: parseDateInput(form.elements.mandatoryInsurance.value),
+        comprehensiveInsurance: parseDateInput(form.elements.comprehensiveInsurance.value),
+        calibrationExpiry: parseDateInput(form.elements.calibrationExpiry.value),
+        equipmentExpiry: parseDateInput(form.elements.equipmentExpiry.value),
+        brakeTestExpiry: parseDateInput(form.elements.brakeTestExpiry.value),
+        carrierLicense: parseDateInput(form.elements.carrierLicense.value),
+        inspectionDate: parseDateInput(form.elements.inspectionDate.value),
         contactName: form.elements.contactName.value,
         contactPhone: form.elements.contactPhone.value,
-        appSynced: form.elements.inspectionDate.value !== editingOldInspectionDate ? 'no' : editingOldAppSynced
+        appSynced: parseDateInput(form.elements.inspectionDate.value) !== editingOldInspectionDate ? 'no' : editingOldAppSynced
     };
 
     const success = await saveRecord(record);
@@ -933,14 +941,14 @@ function showAddForm() {
         </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>תוקף רישוי</label><input type="date" name="licenseExpiry"></div>
-            <div class="modal-field"><label>ביטוח חובה</label><input type="date" name="mandatoryInsurance"></div>
-            <div class="modal-field"><label>ביטוח מקיף</label><input type="date" name="comprehensiveInsurance"></div>
-            <div class="modal-field"><label>כיול</label><input type="date" name="calibrationExpiry"></div>
-            <div class="modal-field"><label>ציוד יעודי</label><input type="date" name="equipmentExpiry"></div>
-            <div class="modal-field"><label>בדיקת בלמים</label><input type="date" name="brakeTestExpiry"></div>
-            <div class="modal-field"><label>רשיון מוביל</label><input type="date" name="carrierLicense"></div>
-            <div class="modal-field"><label>תאריך בדיקה</label><input type="date" name="inspectionDate"></div>
+            <div class="modal-field"><label>תוקף רישוי</label><input type="text" name="licenseExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>ביטוח חובה</label><input type="text" name="mandatoryInsurance" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>ביטוח מקיף</label><input type="text" name="comprehensiveInsurance" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>כיול</label><input type="text" name="calibrationExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>ציוד יעודי</label><input type="text" name="equipmentExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>בדיקת בלמים</label><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>רשיון מוביל</label><input type="text" name="carrierLicense" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
+            <div class="modal-field"><label>תאריך בדיקה</label><input type="text" name="inspectionDate" placeholder="DD/MM/YYYY" pattern="\\d{2}/\\d{2}/\\d{4}" dir="ltr"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
@@ -960,11 +968,14 @@ async function handleAddRecord(event) {
     event.preventDefault();
     const form = event.target;
     const record = {};
+    const dateFields = ['licenseExpiry', 'mandatoryInsurance', 'comprehensiveInsurance',
+     'calibrationExpiry', 'equipmentExpiry', 'brakeTestExpiry', 'carrierLicense', 'inspectionDate'];
     ['customerName', 'location', 'licenseNumber', 'vehicleType',
-     'licenseExpiry', 'mandatoryInsurance', 'comprehensiveInsurance',
-     'calibrationExpiry', 'equipmentExpiry', 'brakeTestExpiry',
-     'carrierLicense', 'inspectionDate', 'contactName', 'contactPhone'
-    ].forEach(f => { record[f] = form.elements[f]?.value || ''; });
+     ...dateFields, 'contactName', 'contactPhone'
+    ].forEach(f => {
+        const val = form.elements[f]?.value || '';
+        record[f] = dateFields.includes(f) ? parseDateInput(val) : val;
+    });
 
     const success = await addNewRecord(record);
     if (success) {
