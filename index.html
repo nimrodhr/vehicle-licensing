@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול רישוי כלי רכב</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-80 z-[100] hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="mt-2 text-sm text-gray-600">טוען נתונים...</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-lg font-bold">ניהול רישוי כלי רכב</h1>
+                    <span id="server-status" class="text-xs px-2 py-0.5 rounded-full bg-gray-600"></span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="navigate('dashboard')" id="nav-dashboard"
+                        class="nav-btn px-3 py-2 rounded-lg transition-colors hover:bg-blue-700 text-sm font-medium">
+                        דשבורד
+                    </button>
+                    <button onclick="navigate('work')" id="nav-work"
+                        class="nav-btn px-3 py-2 rounded-lg transition-colors hover:bg-blue-700 text-sm font-medium">
+                        דף עבודה
+                    </button>
+                    <button onclick="navigate('manage')" id="nav-manage"
+                        class="nav-btn px-3 py-2 rounded-lg transition-colors hover:bg-blue-700 text-sm font-medium">
+                        ניהול
+                    </button>
+                    <span class="mx-1 text-blue-400">|</span>
+                    <button onclick="refreshData()" title="רענון נתונים"
+                        class="px-2 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                        &#x21BB;
+                    </button>
+                    <button onclick="showSettings()" title="הגדרות"
+                        class="px-2 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                        &#9881;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Setup Banner (shown when not connected) -->
+    <div id="setup-banner" class="hidden bg-yellow-50 border-b border-yellow-200">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-yellow-600 text-lg">&#9888;</span>
+                <span class="text-sm text-yellow-800">
+                    <strong>לא מחובר ל-Google Sheets.</strong>
+                    יש להגדיר את כתובת ה-API כדי שהנתונים יישמרו.
+                </span>
+            </div>
+            <button onclick="showSettings()" class="bg-yellow-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-yellow-600 font-medium">
+                הגדר חיבור
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-4">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page hidden">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4" id="summary-cards"></div>
+
+            <div class="bg-white rounded-lg shadow p-3 mb-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">חיפוש</label>
+                        <input type="text" id="dash-search" placeholder="שם לקוח או מספר רישוי..."
+                            class="w-full border rounded-lg px-3 py-2 text-sm" oninput="renderDashboard()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">מיקום</label>
+                        <select id="dash-location" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderDashboard()">
+                            <option value="">הכל</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">סוג רכב</label>
+                        <select id="dash-type" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderDashboard()">
+                            <option value="">הכל</option>
+                            <option value="משא">משא</option>
+                            <option value="נגרר">נגרר</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">סטטוס</label>
+                        <select id="dash-status" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderDashboard()">
+                            <option value="">הכל</option>
+                            <option value="expired">פג תוקף</option>
+                            <option value="critical">1-2 ימים</option>
+                            <option value="warning">30 יום</option>
+                            <option value="valid">תקין</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div id="dashboard-content"></div>
+            </div>
+        </div>
+
+        <!-- Work Page -->
+        <div id="page-work" class="page hidden">
+            <div class="bg-white rounded-lg shadow p-3 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">מיקום</label>
+                        <select id="work-location" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderWorkPage()">
+                            <option value="">הכל</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">לקוח</label>
+                        <select id="work-customer" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderWorkPage()">
+                            <option value="">הכל</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">סוג תוקף</label>
+                        <select id="work-field" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="renderWorkPage()">
+                            <option value="">הכל</option>
+                            <option value="licenseExpiry">רישוי</option>
+                            <option value="mandatoryInsurance">ביטוח חובה</option>
+                            <option value="comprehensiveInsurance">ביטוח מקיף</option>
+                            <option value="calibrationExpiry">כיול</option>
+                            <option value="equipmentExpiry">ציוד יעודי</option>
+                            <option value="brakeTestExpiry">בדיקת בלמים</option>
+                            <option value="carrierLicense">רשיון מוביל</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="work-content"></div>
+        </div>
+
+        <!-- Manage Page -->
+        <div id="page-manage" class="page hidden">
+            <div class="bg-white rounded-lg shadow p-3 mb-4">
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">חיפוש</label>
+                        <input type="text" id="manage-search" placeholder="שם לקוח או מספר רישוי..."
+                            class="w-full border rounded-lg px-3 py-2 text-sm" oninput="renderManagePage()">
+                    </div>
+                    <button onclick="showAddForm()"
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
+                        + הוספה
+                    </button>
+                    <button onclick="exportData()"
+                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium">
+                        ייצוא CSV
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <div id="manage-content"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="min-h-screen flex items-start justify-center py-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 id="modal-title" class="text-lg font-bold"></h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                <div id="modal-content" class="p-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
