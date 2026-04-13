@@ -15,11 +15,10 @@ let _isLoading = false;
 const FIELD_LABELS = {
     licenseExpiry: 'תוקף רישוי',
     mandatoryInsurance: 'ביטוח חובה',
-    comprehensiveInsurance: 'ביטוח מקיף',
     calibrationExpiry: 'כיול',
-    equipmentExpiry: 'ציוד יעודי',
-    brakeTestExpiry: 'בדיקת בלמים',
-    carrierLicense: 'רשיון מוביל'
+    brakeTestExpiry: 'אישור בלמים חצי שנתי',
+    carrierLicense: 'רשיון מוביל',
+    rampCraneInspection: 'תסקיר רמפה/מנוף'
 };
 
 const DATE_FIELDS = Object.keys(FIELD_LABELS);
@@ -520,9 +519,10 @@ function toggleCustomerExpand(row, customerName) {
     let detailHtml = '<td colspan="7" class="p-0"><div class="vehicle-detail bg-blue-50 p-4">';
     detailHtml += '<table class="data-table" style="font-size:0.75rem">';
     detailHtml += `<thead><tr>
-        <th>רישוי</th><th>סוג</th><th>תוקף רישוי</th><th>ביטוח חובה</th>
-        <th>ביטוח מקיף</th><th>כיול</th><th>ציוד</th><th>בלמים</th>
-        <th>מוביל</th><th>בדיקה</th><th>ליקויים</th><th>פעולות</th>
+        <th>רישוי</th><th>סוג</th><th>יצרן</th><th>משקל</th><th>ק״מ</th><th>חומ״ס</th>
+        <th>תוקף רישוי</th><th>ביטוח חובה</th>
+        <th>כיול</th><th>בלמים ח״ש</th>
+        <th>מוביל</th><th>רמפה/מנוף</th><th>בדיקה</th><th>ליקויים</th><th>פעולות</th>
     </tr></thead><tbody>`;
 
     data.forEach(v => {
@@ -531,13 +531,16 @@ function toggleCustomerExpand(row, customerName) {
         detailHtml += `<tr>
             <td class="font-medium">${v.licenseNumber}</td>
             <td>${v.vehicleType}</td>
+            <td>${v.manufacturer || '-'}</td>
+            <td>${v.totalWeight || '-'}</td>
+            <td>${v.mileage || '-'}</td>
+            <td>${v.hazmatCertified === 'yes' ? 'כן' : v.hazmatCertified === 'no' ? 'לא' : '-'}</td>
             <td class="date-${getDateStatus(v.licenseExpiry)}">${formatDate(v.licenseExpiry)}</td>
             <td class="date-${getDateStatus(v.mandatoryInsurance)}">${formatDate(v.mandatoryInsurance)}</td>
-            <td class="date-${getDateStatus(v.comprehensiveInsurance)}">${formatDate(v.comprehensiveInsurance)}</td>
             <td class="date-${getDateStatus(v.calibrationExpiry)}">${formatDate(v.calibrationExpiry)}</td>
-            <td class="date-${getDateStatus(v.equipmentExpiry)}">${formatDate(v.equipmentExpiry)}</td>
             <td class="date-${getDateStatus(v.brakeTestExpiry)}">${formatDate(v.brakeTestExpiry)}</td>
             <td class="date-${getDateStatus(v.carrierLicense)}">${formatDate(v.carrierLicense)}</td>
+            <td class="date-${getDateStatus(v.rampCraneInspection)}">${formatDate(v.rampCraneInspection)}</td>
             <td>${formatDate(v.inspectionDate)}</td>
             <td>${defCell}</td>
             <td><button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button></td>
@@ -737,8 +740,8 @@ function renderManagePage() {
     html += '<table class="data-table">';
     html += `<thead><tr>
         <th>#</th><th>לקוח</th><th>מיקום</th><th>רישוי</th><th>סוג</th>
-        <th>תוקף רישוי</th><th>ביטוח חובה</th><th>ביטוח מקיף</th>
-        <th>כיול</th><th>ציוד</th><th>בלמים</th><th>מוביל</th>
+        <th>תוקף רישוי</th><th>ביטוח חובה</th>
+        <th>כיול</th><th>בלמים ח״ש</th><th>מוביל</th><th>רמפה/מנוף</th>
         <th>ליקויים</th><th>פעולות</th>
     </tr></thead><tbody>`;
 
@@ -752,11 +755,10 @@ function renderManagePage() {
             <td>${r.vehicleType}</td>
             <td class="date-${getDateStatus(r.licenseExpiry)}">${formatDate(r.licenseExpiry)}</td>
             <td class="date-${getDateStatus(r.mandatoryInsurance)}">${formatDate(r.mandatoryInsurance)}</td>
-            <td class="date-${getDateStatus(r.comprehensiveInsurance)}">${formatDate(r.comprehensiveInsurance)}</td>
             <td class="date-${getDateStatus(r.calibrationExpiry)}">${formatDate(r.calibrationExpiry)}</td>
-            <td class="date-${getDateStatus(r.equipmentExpiry)}">${formatDate(r.equipmentExpiry)}</td>
             <td class="date-${getDateStatus(r.brakeTestExpiry)}">${formatDate(r.brakeTestExpiry)}</td>
             <td class="date-${getDateStatus(r.carrierLicense)}">${formatDate(r.carrierLicense)}</td>
+            <td class="date-${getDateStatus(r.rampCraneInspection)}">${formatDate(r.rampCraneInspection)}</td>
             <td class="text-center">
                 ${defCount > 0 ? `<span class="badge status-expired">${defCount}</span>` : '<span class="text-gray-400">0</span>'}
             </td>
@@ -796,11 +798,10 @@ function openEditModal(licenseNumber) {
     const dateFieldEntries = [
         ['licenseExpiry', 'תוקף רישוי'],
         ['mandatoryInsurance', 'ביטוח חובה'],
-        ['comprehensiveInsurance', 'ביטוח מקיף'],
         ['calibrationExpiry', 'כיול'],
-        ['equipmentExpiry', 'ציוד יעודי'],
-        ['brakeTestExpiry', 'בדיקת בלמים'],
+        ['brakeTestExpiry', 'אישור בלמים חצי שנתי'],
         ['carrierLicense', 'רשיון מוביל'],
+        ['rampCraneInspection', 'תסקיר רמפה/מנוף'],
         ['inspectionDate', 'תאריך בדיקה']
     ];
 
@@ -824,6 +825,30 @@ function openEditModal(licenseNumber) {
                 <select name="vehicleType">
                     <option value="משא" ${record.vehicleType === 'משא' ? 'selected' : ''}>משא</option>
                     <option value="נגרר" ${record.vehicleType === 'נגרר' ? 'selected' : ''}>נגרר</option>
+                </select>
+            </div>
+        </div>
+
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="modal-field">
+                <label>יצרן רכב</label>
+                <input type="text" name="manufacturer" value="${record.manufacturer || ''}">
+            </div>
+            <div class="modal-field">
+                <label>משקל כולל</label>
+                <input type="text" name="totalWeight" value="${record.totalWeight || ''}">
+            </div>
+            <div class="modal-field">
+                <label>מספר ק״מ</label>
+                <input type="text" name="mileage" value="${record.mileage || ''}">
+            </div>
+            <div class="modal-field">
+                <label>מורשה חומ״ס</label>
+                <select name="hazmatCertified">
+                    <option value="" ${!record.hazmatCertified ? 'selected' : ''}>-</option>
+                    <option value="yes" ${record.hazmatCertified === 'yes' ? 'selected' : ''}>כן</option>
+                    <option value="no" ${record.hazmatCertified === 'no' ? 'selected' : ''}>לא</option>
                 </select>
             </div>
         </div>
@@ -908,13 +933,16 @@ async function handleSaveEdit(event) {
         licenseNumber: form.elements.licenseNumber.value,
         originalLicenseNumber: form.elements.originalLicense.value, // original license to find row
         vehicleType: form.elements.vehicleType.value,
+        manufacturer: form.elements.manufacturer.value,
+        totalWeight: form.elements.totalWeight.value,
+        mileage: form.elements.mileage.value,
+        hazmatCertified: form.elements.hazmatCertified.value,
         licenseExpiry: parseDateInput(form.elements.licenseExpiry.value),
         mandatoryInsurance: parseDateInput(form.elements.mandatoryInsurance.value),
-        comprehensiveInsurance: parseDateInput(form.elements.comprehensiveInsurance.value),
         calibrationExpiry: parseDateInput(form.elements.calibrationExpiry.value),
-        equipmentExpiry: parseDateInput(form.elements.equipmentExpiry.value),
         brakeTestExpiry: parseDateInput(form.elements.brakeTestExpiry.value),
         carrierLicense: parseDateInput(form.elements.carrierLicense.value),
+        rampCraneInspection: parseDateInput(form.elements.rampCraneInspection.value),
         inspectionDate: parseDateInput(form.elements.inspectionDate.value),
         contactName: form.elements.contactName.value,
         contactPhone: form.elements.contactPhone.value,
@@ -1009,15 +1037,24 @@ function showAddForm() {
                 <select name="vehicleType"><option value="משא">משא</option><option value="נגרר">נגרר</option></select>
             </div>
         </div>
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="modal-field"><label>יצרן רכב</label><input type="text" name="manufacturer"></div>
+            <div class="modal-field"><label>משקל כולל</label><input type="text" name="totalWeight"></div>
+            <div class="modal-field"><label>מספר ק״מ</label><input type="text" name="mileage"></div>
+            <div class="modal-field">
+                <label>מורשה חומ״ס</label>
+                <select name="hazmatCertified"><option value="">-</option><option value="yes">כן</option><option value="no">לא</option></select>
+            </div>
+        </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="modal-field"><label>תוקף רישוי</label><input type="text" name="licenseExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
             <div class="modal-field"><label>ביטוח חובה</label><input type="text" name="mandatoryInsurance" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>ביטוח מקיף</label><input type="text" name="comprehensiveInsurance" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
             <div class="modal-field"><label>כיול</label><input type="text" name="calibrationExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>ציוד יעודי</label><input type="text" name="equipmentExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
-            <div class="modal-field"><label>בדיקת בלמים</label><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
+            <div class="modal-field"><label>אישור בלמים חצי שנתי</label><input type="text" name="brakeTestExpiry" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
             <div class="modal-field"><label>רשיון מוביל</label><input type="text" name="carrierLicense" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
+            <div class="modal-field"><label>תסקיר רמפה/מנוף</label><input type="text" name="rampCraneInspection" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
             <div class="modal-field"><label>תאריך בדיקה</label><input type="text" name="inspectionDate" placeholder="DD/MM/YYYY" dir="ltr" readonly onclick="this.nextElementSibling.showPicker()" style="cursor:pointer"><input type="date" style="position:absolute;visibility:hidden;width:0;height:0" onchange="this.previousElementSibling.value=this.value?formatDate(this.value):''"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
@@ -1038,9 +1075,10 @@ async function handleAddRecord(event) {
     event.preventDefault();
     const form = event.target;
     const record = {};
-    const dateFields = ['licenseExpiry', 'mandatoryInsurance', 'comprehensiveInsurance',
-     'calibrationExpiry', 'equipmentExpiry', 'brakeTestExpiry', 'carrierLicense', 'inspectionDate'];
+    const dateFields = ['licenseExpiry', 'mandatoryInsurance',
+     'calibrationExpiry', 'brakeTestExpiry', 'carrierLicense', 'rampCraneInspection', 'inspectionDate'];
     ['customerName', 'location', 'licenseNumber', 'vehicleType',
+     'manufacturer', 'totalWeight', 'mileage', 'hazmatCertified',
      ...dateFields, 'contactName', 'contactPhone'
     ].forEach(f => {
         const val = form.elements[f]?.value || '';
@@ -1077,15 +1115,18 @@ function exportData() {
     const data = getData();
     const deficiencies = loadDeficiencies();
 
-    const headers = ['שם לקוח', 'מיקום', 'רישוי', 'סוג רכב', 'תוקף רישוי', 'ביטוח חובה',
-        'ביטוח מקיף', 'כיול', 'ציוד יעודי', 'בלמים', 'מוביל', 'בדיקה', 'איש קשר', 'טלפון', 'ליקויים פתוחים'];
+    const headers = ['שם לקוח', 'מיקום', 'רישוי', 'סוג רכב', 'יצרן', 'משקל כולל', 'ק״מ', 'חומ״ס',
+        'תוקף רישוי', 'ביטוח חובה', 'כיול', 'בלמים ח״ש', 'מוביל', 'רמפה/מנוף',
+        'בדיקה', 'איש קשר', 'טלפון', 'ליקויים פתוחים'];
 
     const rows = data.map(r => {
         const openDefs = (deficiencies[r.licenseNumber] || []).filter(d => d.status !== 'resolved').length;
         return [r.customerName, r.location, r.licenseNumber, r.vehicleType,
-            r.licenseExpiry, r.mandatoryInsurance, r.comprehensiveInsurance,
-            r.calibrationExpiry, r.equipmentExpiry, r.brakeTestExpiry,
-            r.carrierLicense, r.inspectionDate, r.contactName, r.contactPhone, openDefs
+            r.manufacturer || '', r.totalWeight || '', r.mileage || '', r.hazmatCertified || '',
+            r.licenseExpiry, r.mandatoryInsurance,
+            r.calibrationExpiry, r.brakeTestExpiry,
+            r.carrierLicense, r.rampCraneInspection || '',
+            r.inspectionDate, r.contactName, r.contactPhone, openDefs
         ].map(v => `"${v}"`).join(',');
     });
 

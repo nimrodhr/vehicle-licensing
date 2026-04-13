@@ -14,15 +14,18 @@ const COLS = {
   vehicleType: 3,
   licenseExpiry: 4,
   mandatoryInsurance: 5,
-  comprehensiveInsurance: 6,
-  calibrationExpiry: 7,
-  equipmentExpiry: 8,
-  brakeTestExpiry: 9,
-  carrierLicense: 10,
-  inspectionDate: 11,
-  contactName: 12,
-  contactPhone: 13,
-  appSynced: 14
+  calibrationExpiry: 6,
+  brakeTestExpiry: 7,
+  carrierLicense: 8,
+  rampCraneInspection: 9,
+  inspectionDate: 10,
+  contactName: 11,
+  contactPhone: 12,
+  appSynced: 13,
+  manufacturer: 14,
+  totalWeight: 15,
+  mileage: 16,
+  hazmatCertified: 17
 };
 
 // ============================================================
@@ -136,15 +139,18 @@ function getAllVehicles() {
       vehicleType: String(row[COLS.vehicleType] || ''),
       licenseExpiry: formatDateValue(row[COLS.licenseExpiry]),
       mandatoryInsurance: formatDateValue(row[COLS.mandatoryInsurance]),
-      comprehensiveInsurance: formatDateValue(row[COLS.comprehensiveInsurance]),
       calibrationExpiry: formatDateValue(row[COLS.calibrationExpiry]),
-      equipmentExpiry: formatDateValue(row[COLS.equipmentExpiry]),
       brakeTestExpiry: formatDateValue(row[COLS.brakeTestExpiry]),
       carrierLicense: formatDateValue(row[COLS.carrierLicense]),
+      rampCraneInspection: formatDateValue(row[COLS.rampCraneInspection]),
       inspectionDate: formatDateValue(row[COLS.inspectionDate]),
       contactName: String(row[COLS.contactName] || ''),
       contactPhone: String(row[COLS.contactPhone] || ''),
-      appSynced: String(row[COLS.appSynced] || '')
+      appSynced: String(row[COLS.appSynced] || ''),
+      manufacturer: String(row[COLS.manufacturer] || ''),
+      totalWeight: String(row[COLS.totalWeight] || ''),
+      mileage: String(row[COLS.mileage] || ''),
+      hazmatCertified: String(row[COLS.hazmatCertified] || '')
     });
   }
 
@@ -174,15 +180,18 @@ function updateVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
-    parseDateString(record.comprehensiveInsurance),
     parseDateString(record.calibrationExpiry),
-    parseDateString(record.equipmentExpiry),
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
+    parseDateString(record.rampCraneInspection),
     parseDateString(record.inspectionDate),
     record.contactName || '',
     record.contactPhone || '',
-    record.appSynced || ''
+    record.appSynced || '',
+    record.manufacturer || '',
+    record.totalWeight || '',
+    record.mileage || '',
+    record.hazmatCertified || ''
   ];
 
   sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
@@ -214,15 +223,18 @@ function addVehicle(record) {
     record.vehicleType || '',
     parseDateString(record.licenseExpiry),
     parseDateString(record.mandatoryInsurance),
-    parseDateString(record.comprehensiveInsurance),
     parseDateString(record.calibrationExpiry),
-    parseDateString(record.equipmentExpiry),
     parseDateString(record.brakeTestExpiry),
     parseDateString(record.carrierLicense),
+    parseDateString(record.rampCraneInspection),
     parseDateString(record.inspectionDate),
     record.contactName || '',
     record.contactPhone || '',
-    ''
+    '',
+    record.manufacturer || '',
+    record.totalWeight || '',
+    record.mileage || '',
+    record.hazmatCertified || ''
   ];
 
   sheet.appendRow(rowData);
