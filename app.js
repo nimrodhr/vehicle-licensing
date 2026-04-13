@@ -397,7 +397,7 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-red-500 cursor-pointer" onclick="document.getElementById('dash-status').value='expired';renderDashboard()">
             <div class="text-3xl font-bold text-red-600">${expired}</div>
-            <div class="text-sm text-gray-600">רכבים עם תוקף פג</div>
+            <div class="text-sm text-gray-600">רכבים עם רישוי פג תוקף</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='critical';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${critical}</div>
