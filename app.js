@@ -297,6 +297,36 @@ function populateFilters() {
 }
 
 // ============================================================
+// Filter Indicator
+// ============================================================
+
+function updateFilterIndicator(filterIds, clearFn, containerId) {
+    // Highlight active filters
+    let activeCount = 0;
+    filterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isActive = el.value !== '';
+        el.classList.toggle('filter-active', isActive);
+        if (isActive) activeCount++;
+    });
+
+    // Show/hide filter banner
+    const existingBanner = document.getElementById(`${containerId}-filter-banner`);
+    if (existingBanner) existingBanner.remove();
+
+    if (activeCount > 0) {
+        const banner = document.createElement('div');
+        banner.id = `${containerId}-filter-banner`;
+        banner.className = 'filter-banner';
+        banner.innerHTML = `<span>מציג תוצאות מסוננות (${activeCount} ${activeCount === 1 ? 'פילטר פעיל' : 'פילטרים פעילים'})</span>
+            <button onclick="${clearFn}" class="filter-clear-btn">נקה פילטרים &times;</button>`;
+        const container = document.getElementById(containerId);
+        if (container) container.insertBefore(banner, container.firstChild);
+    }
+}
+
+// ============================================================
 // Dashboard Page
 // ============================================================
 
@@ -405,6 +435,7 @@ function renderDashboard() {
 
     html += '</tbody></table></div>';
     document.getElementById('dashboard-content').innerHTML = html;
+    updateFilterIndicator(['dash-search', 'dash-location', 'dash-type', 'dash-status'], 'clearDashFilters()', 'page-dashboard');
 }
 
 function toggleCustomerExpand(row, customerName) {
@@ -503,6 +534,7 @@ function renderWorkPage() {
             <div class="text-lg font-bold text-green-700">אין התראות!</div>
             <div class="text-sm text-green-600">כל הרישיונות תקינים בטווח הסינון הנוכחי</div>
         </div>`;
+        updateFilterIndicator(['work-location', 'work-customer', 'work-field'], 'clearWorkFilters()', 'page-work');
         return;
     }
 
@@ -590,6 +622,14 @@ function renderWorkPage() {
 
     html += '</tbody></table></div></div>';
     document.getElementById('work-content').innerHTML = html;
+    updateFilterIndicator(['work-location', 'work-customer', 'work-field'], 'clearWorkFilters()', 'page-work');
+}
+
+function clearWorkFilters() {
+    document.getElementById('work-location').value = '';
+    document.getElementById('work-customer').value = '';
+    document.getElementById('work-field').value = '';
+    renderWorkPage();
 }
 
 // ============================================================
