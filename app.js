@@ -90,10 +90,13 @@ function loadDeficiencies() {
 
 async function saveRecord(record) {
     // Update local cache immediately for fast UI
-    const idx = _vehicleData.findIndex(r => r.licenseNumber === record.licenseNumber);
+    const lookupKey = record.originalLicenseNumber || record.licenseNumber;
+    const idx = _vehicleData.findIndex(r => r.licenseNumber === lookupKey);
     if (idx !== -1) {
         Object.assign(_vehicleData[idx], record);
+        _vehicleData[idx].licenseNumber = record.licenseNumber;
         _vehicleData[idx].id = record.licenseNumber;
+        delete _vehicleData[idx].originalLicenseNumber;
     }
 
     try {
@@ -875,7 +878,8 @@ async function handleSaveEdit(event) {
     const record = {
         customerName: form.elements.customerName.value,
         location: form.elements.location.value,
-        licenseNumber: form.elements.originalLicense.value, // original license to find row
+        licenseNumber: form.elements.licenseNumber.value,
+        originalLicenseNumber: form.elements.originalLicense.value, // original license to find row
         vehicleType: form.elements.vehicleType.value,
         licenseExpiry: parseDateInput(form.elements.licenseExpiry.value),
         mandatoryInsurance: parseDateInput(form.elements.mandatoryInsurance.value),

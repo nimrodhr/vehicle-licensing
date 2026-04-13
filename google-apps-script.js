@@ -159,8 +159,9 @@ function updateVehicle(record) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
 
-  // Find row by license number
-  const rowIndex = findRowByLicense(sheet, record.licenseNumber || record.id);
+  // Find row by license number (use original if license was changed)
+  const lookupKey = record.originalLicenseNumber || record.licenseNumber || record.id;
+  const rowIndex = findRowByLicense(sheet, lookupKey);
   if (rowIndex === -1) {
     return { error: 'Record not found: ' + (record.licenseNumber || record.id) };
   }
