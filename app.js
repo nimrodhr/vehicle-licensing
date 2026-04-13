@@ -337,16 +337,8 @@ function renderDashboard() {
         else valid++;
     });
 
-    function clearFilters() {
-        document.getElementById('dash-status').value='';
-        document.getElementById('dash-search').value='';
-        document.getElementById('dash-location').value='';
-        document.getElementById('dash-type').value='';
-        renderDashboard();
-    }
-
     document.getElementById('summary-cards').innerHTML = `
-        <div class="summary-card bg-white border-r-4 border-blue-500 cursor-pointer" onclick="clearFilters()">
+        <div class="summary-card bg-white border-r-4 border-blue-500 cursor-pointer" onclick="document.getElementById('dash-status').value='';document.getElementById('dash-search').value='';document.getElementById('dash-location').value='';document.getElementById('dash-type').value='';renderDashboard()">
             <div class="text-3xl font-bold text-blue-600">${data.length}</div>
             <div class="text-sm text-gray-600">סה"כ כלי רכב</div>
             <div class="text-xs text-gray-400 mt-1">${uniqueCustomers} לקוחות</div>
