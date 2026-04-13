@@ -546,15 +546,7 @@ function renderWorkPage() {
     const vehicles = [];
     data.forEach(record => {
         if (location && normalizeStr(record.location) !== location) return;
-        if (customer && normalizeStr(record.customerName) !== customer) {
-            if (record.licenseNumber === '63569101' || record.licenseNumber === '9988312' || record.licenseNumber === '4273572') {
-                const a = normalizeStr(record.customerName), b = customer;
-                const codes1 = [...a].map(c => 'U+' + c.charCodeAt(0).toString(16).padStart(4,'0')).join(' ');
-                const codes2 = [...b].map(c => 'U+' + c.charCodeAt(0).toString(16).padStart(4,'0')).join(' ');
-                console.log('MISMATCH:', record.licenseNumber, '\nRECORD:', a, '\nCODES:', codes1, '\nFILTER:', b, '\nCODES:', codes2);
-            }
-            return;
-        }
+        if (customer && normalizeStr(record.customerName) !== customer) return;
         if (syncFilter === 'no' && record.appSynced === 'yes') return;
         if (syncFilter === 'yes' && record.appSynced !== 'yes') return;
 
