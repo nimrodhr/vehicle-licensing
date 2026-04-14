@@ -455,7 +455,7 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-amber-500 cursor-pointer" onclick="document.getElementById('dash-status').value='pendingSync';renderDashboard()">
             <div class="text-3xl font-bold text-amber-600">${data.filter(r => r.appSynced !== 'yes').length}</div>
-            <div class="text-sm text-gray-600">ממתינים לעדכון במערכת</div>
+            <div class="text-sm text-gray-600">רכבים הממתינים לעדכון במערכת</div>
         </div>
     `;
 
