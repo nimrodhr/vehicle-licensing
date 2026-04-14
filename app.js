@@ -447,7 +447,7 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-green-500 cursor-pointer" onclick="document.getElementById('dash-status').value='valid';renderDashboard()">
             <div class="text-3xl font-bold text-green-600">${valid}</div>
-            <div class="text-sm text-gray-600">רכבים תקינים</div>
+            <div class="text-sm text-gray-600">רכבים עם רישוי תקין</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-purple-500 cursor-pointer" onclick="document.getElementById('dash-status').value='openDefs';renderDashboard()">
             <div class="text-3xl font-bold text-purple-600">${openDefs}</div>
