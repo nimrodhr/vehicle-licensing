@@ -439,7 +439,7 @@ function renderDashboard() {
         </div>
         <div class="summary-card bg-white border-r-4 border-orange-500 cursor-pointer" onclick="document.getElementById('dash-status').value='critical';renderDashboard()">
             <div class="text-3xl font-bold text-orange-600">${critical}</div>
-            <div class="text-sm text-gray-600">רכבים פוקעים ביומיים</div>
+            <div class="text-sm text-gray-600">רכבים עם רישוי הפוקע ביומיים הקרובים</div>
         </div>
         <div class="summary-card bg-white border-r-4 border-yellow-500 cursor-pointer" onclick="document.getElementById('dash-status').value='warning';renderDashboard()">
             <div class="text-3xl font-bold text-yellow-600">${warning}</div>
