@@ -624,7 +624,13 @@ function compareWorkRows(a, b, column) {
         case 'vehicleType':  return cmpStr(ra.vehicleType, rb.vehicleType);
         case 'inspectionDate': return cmpDate(ra.inspectionDate, rb.inspectionDate);
         case 'carrierLicenseSigned': return cmpDate(ra.carrierLicenseSigned, rb.carrierLicenseSigned);
-        case 'licenseStatus': return cmpNum(STATUS_PRIORITY[getRecordWorstStatus(ra)], STATUS_PRIORITY[getRecordWorstStatus(rb)]);
+        case 'notes': {
+            const na = (ra.notes || '').trim(), nb = (rb.notes || '').trim();
+            if (!na && !nb) return 0;
+            if (!na) return 1;
+            if (!nb) return -1;
+            return cmpStr(na, nb);
+        }
         case 'openDefs':     return cmpNum(a.openDefs, b.openDefs);
         case 'appSynced':    return cmpNum(ra.appSynced === 'yes' ? 1 : 0, rb.appSynced === 'yes' ? 1 : 0);
         default: return 0;
@@ -635,7 +641,6 @@ function renderWorkPage() {
     const data = getData();
     const location = document.getElementById('work-location')?.value || '';
     const customer = document.getElementById('work-customer')?.value || '';
-    const fieldFilter = document.getElementById('work-field')?.value || '';
     const syncFilter = document.getElementById('work-sync')?.value || '';
 
     const defs = loadDeficiencies();
@@ -669,11 +674,10 @@ function renderWorkPage() {
             <div class="text-4xl mb-2">&#10003;</div>
             <div class="text-lg font-bold text-green-700">אין רכבים להצגה</div>
         </div>`;
-        updateFilterIndicator(['work-location', 'work-customer', 'work-field', 'work-sync'], 'clearWorkFilters()', 'page-work');
+        updateFilterIndicator(['work-location', 'work-customer', 'work-sync'], 'clearWorkFilters()', 'page-work');
         return;
     }
 
-    const fieldsToCheck = fieldFilter ? [fieldFilter] : DATE_FIELDS;
     const sh = (col, label) => sortHeader(col, label);
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
@@ -690,7 +694,7 @@ function renderWorkPage() {
                 ${sh('vehicleType', 'סוג')}
                 ${sh('inspectionDate', 'ביקור אחרון')}
                 ${sh('carrierLicenseSigned', 'נחתם רישיון מוביל עד')}
-                ${sh('licenseStatus', 'סטטוס רישויים')}
+                ${sh('notes', 'הערות')}
                 ${sh('openDefs', 'ליקויים')}
                 ${sh('appSynced', 'מערכת')}
                 <th></th>
@@ -725,27 +729,15 @@ function renderWorkPage() {
             carrierLicenseSignedCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.carrierLicenseSigned)}</div><div class="work-cell-days">${daysText}</div></td>`;
         }
 
-        // License status summary - consolidate 7 date fields into one cell
-        const issues = [];
-        fieldsToCheck.forEach(field => {
-            const val = rec[field];
-            if (!val) return;
-            const status = getDateStatus(val);
-            if (status === 'expired' || status === 'critical' || status === 'warning') {
-                issues.push({ label: FIELD_LABELS[field], status, days: daysUntil(val) });
-            }
-        });
-
-        let licenseCell = '';
-        if (issues.length === 0) {
-            licenseCell = `<td class="work-cell work-cell-valid text-center"><div>תקין</div></td>`;
+        // Notes cell - free text, truncated to 3 lines with full text on hover
+        const notesText = (rec.notes || '').trim();
+        let notesCell;
+        if (!notesText) {
+            notesCell = `<td class="work-cell work-cell-empty text-center">-</td>`;
         } else {
-            const badges = issues.map(i => {
-                const daysText = i.days < 0 ? `פג ${Math.abs(i.days)}י'` : i.days === 0 ? 'פג היום' : `${i.days}י'`;
-                return `<span class="license-badge license-badge-${i.status}">${i.label} ${daysText}</span>`;
-            }).join('');
-            const worstStatus = issues.some(i => i.status === 'expired') ? 'expired' : issues.some(i => i.status === 'critical') ? 'critical' : 'warning';
-            licenseCell = `<td class="work-cell work-cell-${worstStatus} license-badges-cell">${badges}</td>`;
+            const escapeHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const escapeAttr = s => escapeHtml(s).replace(/"/g, '&quot;').replace(/\n/g, ' ');
+            notesCell = `<td class="work-cell-notes" title="${escapeAttr(notesText)}"><div class="work-notes-content">${escapeHtml(notesText)}</div></td>`;
         }
 
         // App sync status
@@ -765,7 +757,7 @@ function renderWorkPage() {
         html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
         html += inspectionCell;
         html += carrierLicenseSignedCell;
-        html += licenseCell;
+        html += notesCell;
 
         if (openDefs > 0) {
             html += `<td class="work-cell work-cell-expired text-center"><div>${openDefs}</div><div class="work-cell-days">פתוחים</div></td>`;
@@ -790,13 +782,12 @@ function renderWorkPage() {
 
     html += '</tbody></table></div></div>';
     document.getElementById('work-content').innerHTML = html;
-    updateFilterIndicator(['work-location', 'work-customer', 'work-field', 'work-sync'], 'clearWorkFilters()', 'page-work');
+    updateFilterIndicator(['work-location', 'work-customer', 'work-sync'], 'clearWorkFilters()', 'page-work');
 }
 
 function clearWorkFilters() {
     document.getElementById('work-location').value = '';
     document.getElementById('work-customer').value = '';
-    document.getElementById('work-field').value = '';
     document.getElementById('work-sync').value = '';
     renderWorkPage();
 }
