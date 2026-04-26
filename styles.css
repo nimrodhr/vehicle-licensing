@@ -232,6 +232,19 @@
     z-index: 10;
 }
 
+.work-table th.work-sort-th {
+    cursor: pointer;
+    user-select: none;
+}
+
+.work-table th.work-sort-th:hover {
+    background-color: #334155;
+}
+
+.work-table th.work-sort-active {
+    background-color: #1e3a8a;
+}
+
 .work-table td {
     padding: 6px 10px;
     border-bottom: 1px solid #e5e7eb;

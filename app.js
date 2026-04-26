@@ -11,6 +11,9 @@ let _vehicleData = [];
 let _deficiencyData = {};
 let _isLoading = false;
 
+// Work page sort state
+let _workSort = { column: 'inspectionDate', direction: 'asc' };
+
 // Field labels in Hebrew
 const FIELD_LABELS = {
     licenseExpiry: 'תוקף רישוי',
@@ -573,6 +576,61 @@ function toggleCustomerExpand(row, customerName) {
 // Work Page
 // ============================================================
 
+function setWorkSort(column) {
+    if (_workSort.column === column) {
+        _workSort.direction = _workSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        _workSort.column = column;
+        _workSort.direction = 'asc';
+    }
+    renderWorkPage();
+}
+
+function sortHeader(column, label) {
+    const active = _workSort.column === column;
+    const arrow = active ? (_workSort.direction === 'asc' ? ' ▲' : ' ▼') : '';
+    const cls = active ? 'work-sort-th work-sort-active' : 'work-sort-th';
+    return `<th class="${cls}" onclick="setWorkSort('${column}')">${label}${arrow}</th>`;
+}
+
+const STATUS_PRIORITY = { expired: 0, critical: 1, warning: 2, valid: 3, empty: 4 };
+
+function sortWorkVehicles(vehicles) {
+    const { column, direction } = _workSort;
+    const dir = direction === 'asc' ? 1 : -1;
+    vehicles.sort((a, b) => dir * compareWorkRows(a, b, column));
+}
+
+function compareWorkRows(a, b, column) {
+    const ra = a.record, rb = b.record;
+    const cmpStr = (x, y) => (x || '').localeCompare(y || '', 'he');
+    const cmpNum = (x, y) => x - y;
+    const cmpDate = (x, y) => {
+        if (!x && !y) return 0;
+        if (!x) return 1;
+        if (!y) return -1;
+        return x.localeCompare(y);
+    };
+    switch (column) {
+        case 'visited':   return cmpNum(a.visitedThisMonth ? 1 : 0, b.visitedThisMonth ? 1 : 0);
+        case 'customerName': return cmpStr(ra.customerName, rb.customerName);
+        case 'contactName':  return cmpStr(ra.contactName, rb.contactName);
+        case 'licenseNumber': {
+            const na = parseInt((ra.licenseNumber || '').replace(/\D/g, ''), 10);
+            const nb = parseInt((rb.licenseNumber || '').replace(/\D/g, ''), 10);
+            if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+            return cmpStr(ra.licenseNumber, rb.licenseNumber);
+        }
+        case 'vehicleType':  return cmpStr(ra.vehicleType, rb.vehicleType);
+        case 'inspectionDate': return cmpDate(ra.inspectionDate, rb.inspectionDate);
+        case 'carrierLicenseSigned': return cmpDate(ra.carrierLicenseSigned, rb.carrierLicenseSigned);
+        case 'licenseStatus': return cmpNum(STATUS_PRIORITY[getRecordWorstStatus(ra)], STATUS_PRIORITY[getRecordWorstStatus(rb)]);
+        case 'openDefs':     return cmpNum(a.openDefs, b.openDefs);
+        case 'appSynced':    return cmpNum(ra.appSynced === 'yes' ? 1 : 0, rb.appSynced === 'yes' ? 1 : 0);
+        default: return 0;
+    }
+}
+
 function renderWorkPage() {
     const data = getData();
     const location = document.getElementById('work-location')?.value || '';
@@ -598,12 +656,8 @@ function renderWorkPage() {
         vehicles.push({ record, openDefs, visitedThisMonth });
     });
 
-    // Sort by inspectionDate ascending (oldest/empty first = needs visit most)
-    vehicles.sort((a, b) => {
-        const dateA = a.record.inspectionDate || '0000-00-00';
-        const dateB = b.record.inspectionDate || '0000-00-00';
-        return dateA.localeCompare(dateB);
-    });
+    // Sort by selected column / direction
+    sortWorkVehicles(vehicles);
 
     // Current month name
     const monthName = new Date().toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
@@ -620,6 +674,7 @@ function renderWorkPage() {
     }
 
     const fieldsToCheck = fieldFilter ? [fieldFilter] : DATE_FIELDS;
+    const sh = (col, label) => sortHeader(col, label);
     let html = `<div class="work-section">
         <div class="work-section-header bg-blue-700 text-white">
             <span>דף עבודה - ${monthName}</span>
@@ -628,16 +683,16 @@ function renderWorkPage() {
         <div class="table-container">
         <table class="work-table">
             <thead><tr>
-                <th></th>
-                <th>לקוח</th>
-                <th>איש קשר</th>
-                <th>רכב</th>
-                <th>סוג</th>
-                <th>ביקור אחרון</th>
-                <th>נחתם רישיון מוביל עד</th>
-                <th>סטטוס רישויים</th>
-                <th>ליקויים</th>
-                <th>מערכת</th>
+                ${sh('visited', '')}
+                ${sh('customerName', 'לקוח')}
+                ${sh('contactName', 'איש קשר')}
+                ${sh('licenseNumber', 'רכב')}
+                ${sh('vehicleType', 'סוג')}
+                ${sh('inspectionDate', 'ביקור אחרון')}
+                ${sh('carrierLicenseSigned', 'נחתם רישיון מוביל עד')}
+                ${sh('licenseStatus', 'סטטוס רישויים')}
+                ${sh('openDefs', 'ליקויים')}
+                ${sh('appSynced', 'מערכת')}
                 <th></th>
             </tr></thead>
             <tbody>`;
