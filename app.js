@@ -634,6 +634,7 @@ function renderWorkPage() {
                 <th>רכב</th>
                 <th>סוג</th>
                 <th>ביקור אחרון</th>
+                <th>נחתם רישיון מוביל עד</th>
                 <th>סטטוס רישויים</th>
                 <th>ליקויים</th>
                 <th>מערכת</th>
@@ -655,6 +656,18 @@ function renderWorkPage() {
             const daysText = daysSince === 0 ? 'היום' : daysSince === 1 ? 'אתמול' : `לפני ${daysSince} ימים`;
             const cellClass = visitedThisMonth ? 'work-cell-valid' : (daysSince > 45 ? 'work-cell-expired' : 'work-cell-warning');
             inspectionCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.inspectionDate)}</div><div class="work-cell-days">${daysText}</div></td>`;
+        }
+
+        // Carrier license signed date display
+        let carrierLicenseSignedCell = '';
+        if (!rec.carrierLicenseSigned) {
+            carrierLicenseSignedCell = `<td class="work-cell work-cell-empty text-center">-</td>`;
+        } else {
+            const status = getDateStatus(rec.carrierLicenseSigned);
+            const days = daysUntil(rec.carrierLicenseSigned);
+            const daysText = days < 0 ? `פג ${Math.abs(days)}י'` : days === 0 ? 'פג היום' : `בעוד ${days}י'`;
+            const cellClass = status === 'expired' ? 'work-cell-expired' : (status === 'critical' || status === 'warning') ? 'work-cell-warning' : 'work-cell-valid';
+            carrierLicenseSignedCell = `<td class="work-cell ${cellClass}"><div>${formatDate(rec.carrierLicenseSigned)}</div><div class="work-cell-days">${daysText}</div></td>`;
         }
 
         // License status summary - consolidate 7 date fields into one cell
@@ -696,6 +709,7 @@ function renderWorkPage() {
         html += `<td class="font-bold">${rec.licenseNumber}</td>`;
         html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
         html += inspectionCell;
+        html += carrierLicenseSignedCell;
         html += licenseCell;
 
         if (openDefs > 0) {
