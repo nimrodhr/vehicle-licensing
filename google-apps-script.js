@@ -60,6 +60,23 @@ function migrateColumns2() {
   Logger.log('Migration 2 complete! Added winterInspection and carrierLicenseSigned columns.');
 }
 
+function migrateColumns3() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { Logger.log('Sheet not found: ' + SHEET_NAME); return; }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  if (headers.includes('הערות')) {
+    Logger.log('Migration 3 already applied. Skipping.');
+    return;
+  }
+
+  sheet.getRange(1, COLS.notes + 1).setValue('הערות');
+  Logger.log('Migration 3 complete! Added notes column at col ' + (COLS.notes + 1));
+}
+
 // Column mapping (0-based index)
 const COLS = {
   customerName: 0,
@@ -81,7 +98,8 @@ const COLS = {
   mileage: 16,
   hazmatCertified: 17,
   winterInspection: 18,
-  carrierLicenseSigned: 19
+  carrierLicenseSigned: 19,
+  notes: 20
 };
 
 // ============================================================
@@ -208,7 +226,8 @@ function getAllVehicles() {
       mileage: String(row[COLS.mileage] || ''),
       hazmatCertified: String(row[COLS.hazmatCertified] || ''),
       winterInspection: formatDateValue(row[COLS.winterInspection]),
-      carrierLicenseSigned: formatDateValue(row[COLS.carrierLicenseSigned])
+      carrierLicenseSigned: formatDateValue(row[COLS.carrierLicenseSigned]),
+      notes: String(row[COLS.notes] || '')
     });
   }
 
@@ -251,7 +270,8 @@ function updateVehicle(record) {
     record.mileage || '',
     record.hazmatCertified || '',
     parseDateString(record.winterInspection),
-    parseDateString(record.carrierLicenseSigned)
+    parseDateString(record.carrierLicenseSigned),
+    record.notes || ''
   ];
 
   sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
@@ -296,7 +316,8 @@ function addVehicle(record) {
     record.mileage || '',
     record.hazmatCertified || '',
     parseDateString(record.winterInspection),
-    parseDateString(record.carrierLicenseSigned)
+    parseDateString(record.carrierLicenseSigned),
+    record.notes || ''
   ];
 
   sheet.appendRow(rowData);

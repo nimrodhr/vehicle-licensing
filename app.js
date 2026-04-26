@@ -960,6 +960,9 @@ function openEditModal(licenseNumber) {
             <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone" value="${record.contactPhone}"></div>
         </div>
 
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
+        <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב...">${(record.notes || '').replace(/</g, '&lt;')}</textarea></div>
+
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">ליקויים</h4>
         <div id="deficiencies-list">${tempDeficiencies.map((d, i) => renderDeficiencyItem(d, i)).join('')}</div>
         <button type="button" onclick="addDeficiency()" class="text-blue-600 text-base mt-2 py-2 hover:underline font-medium">+ הוסף ליקוי</button>
@@ -1035,6 +1038,7 @@ async function handleSaveEdit(event) {
         inspectionDate: parseDateInput(form.elements.inspectionDate.value),
         contactName: form.elements.contactName.value,
         contactPhone: form.elements.contactPhone.value,
+        notes: form.elements.notes ? form.elements.notes.value : '',
         appSynced: parseDateInput(form.elements.inspectionDate.value) !== editingOldInspectionDate ? 'no' : editingOldAppSynced
     };
 
@@ -1161,6 +1165,8 @@ function showAddForm() {
             <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
             <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone"></div>
         </div>
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
+        <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב..."></textarea></div>
         <div class="flex gap-3 mt-4 pt-3 border-t">
             <button type="submit" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-medium text-base">הוסף</button>
             <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">ביטול</button>
@@ -1179,7 +1185,7 @@ async function handleAddRecord(event) {
      'calibrationExpiry', 'brakeTestExpiry', 'carrierLicense', 'rampCraneInspection', 'winterInspection', 'carrierLicenseSigned', 'inspectionDate'];
     ['customerName', 'location', 'licenseNumber', 'vehicleType',
      'manufacturer', 'totalWeight', 'mileage', 'hazmatCertified',
-     ...dateFields, 'contactName', 'contactPhone'
+     ...dateFields, 'contactName', 'contactPhone', 'notes'
     ].forEach(f => {
         const val = form.elements[f]?.value || '';
         record[f] = dateFields.includes(f) ? parseDateInput(val) : val;
@@ -1217,16 +1223,17 @@ function exportData() {
 
     const headers = ['שם לקוח', 'מיקום', 'רישוי', 'סוג רכב', 'יצרן', 'משקל כולל', 'ק״מ', 'חומ״ס',
         'תוקף רישוי', 'ביטוח חובה', 'כיול', 'בלמים ח״ש', 'מוביל', 'רמפה/מנוף', 'חורף', 'נחתם מוביל',
-        'בדיקה', 'איש קשר', 'טלפון', 'ליקויים פתוחים'];
+        'בדיקה', 'איש קשר', 'טלפון', 'ליקויים פתוחים', 'הערות'];
 
     const rows = data.map(r => {
         const openDefs = (deficiencies[r.licenseNumber] || []).filter(d => d.status !== 'resolved').length;
+        const notesCsv = (r.notes || '').replace(/"/g, '""').replace(/\r?\n/g, ' ');
         return [r.customerName, r.location, r.licenseNumber, r.vehicleType,
             r.manufacturer || '', r.totalWeight || '', r.mileage || '', r.hazmatCertified || '',
             r.licenseExpiry, r.mandatoryInsurance,
             r.calibrationExpiry, r.brakeTestExpiry,
             r.carrierLicense, r.rampCraneInspection || '', r.winterInspection || '', r.carrierLicenseSigned || '',
-            r.inspectionDate, r.contactName, r.contactPhone, openDefs
+            r.inspectionDate, r.contactName, r.contactPhone, openDefs, notesCsv
         ].map(v => `"${v}"`).join(',');
     });
 
