@@ -714,6 +714,15 @@
     color: #3730a3;
 }
 .tpl-eye-btn:hover { background: #e0e7ff; }
+.tpl-locked {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 0.5rem;
+    color: #9ca3af;
+    font-size: 1rem;
+}
 .tpl-custom-row.tpl-hidden {
     opacity: 0.55;
     background: #f3f4f6;

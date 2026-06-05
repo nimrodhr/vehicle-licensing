@@ -31,6 +31,69 @@ const DEFAULT_FIELD_LABELS = {
 
 const DATE_FIELDS = Object.keys(DEFAULT_FIELD_LABELS);
 
+// Default labels for every built-in card field
+const BUILTIN_LABELS = Object.assign({
+    customerName: 'שם לקוח',
+    location: 'מיקום',
+    licenseNumber: 'מספר רישוי',
+    vehicleType: 'סוג רכב',
+    manufacturer: 'יצרן רכב',
+    totalWeight: 'משקל כולל',
+    mileage: 'מספר ק״מ',
+    hazmatCertified: 'מורשה חומ״ס',
+    inspectionDate: 'תאריך בדיקה',
+    address: 'כתובת',
+    notes: 'הערות'
+}, DEFAULT_FIELD_LABELS);
+
+// Registry of all built-in card fields, grouped by the card's sections.
+//   kind: identity | text | fixedselect | date | textarea
+//   hideable: can be hidden from the card
+//   typeable: type can be changed (text<->select, or date->text/select)
+const CARD_SECTIONS = [
+    { id: 'general', title: 'פרטים כלליים', fields: [
+        { key: 'customerName', kind: 'identity' },
+        { key: 'location', kind: 'text', hideable: true, required: true },
+        { key: 'licenseNumber', kind: 'identity' },
+        { key: 'vehicleType', kind: 'fixedselect', hideable: true,
+          selectOptions: [{ v: 'משא', t: 'משא' }, { v: 'נגרר', t: 'נגרר' }] }
+    ] },
+    { id: 'vehicle', title: 'פרטי רכב', fields: [
+        { key: 'manufacturer', kind: 'text', hideable: true, typeable: true },
+        { key: 'totalWeight', kind: 'text', hideable: true, typeable: true },
+        { key: 'mileage', kind: 'text', hideable: true, typeable: true },
+        { key: 'hazmatCertified', kind: 'fixedselect', hideable: true,
+          selectOptions: [{ v: '', t: '-' }, { v: 'yes', t: 'כן' }, { v: 'no', t: 'לא' }] }
+    ] },
+    { id: 'dates', title: 'תאריכי תוקף', fields:
+        DATE_FIELDS.map(k => ({ key: k, kind: 'date', hideable: true, typeable: true }))
+            .concat([{ key: 'inspectionDate', kind: 'date', hideable: true }]) },
+    { id: 'contact', title: 'איש קשר', fields: [
+        { key: 'address', kind: 'text', hideable: true, typeable: true }
+    ] },
+    { id: 'notes', title: 'הערות', fields: [
+        { key: 'notes', kind: 'textarea', hideable: true }
+    ] }
+];
+
+function findCardField(key) {
+    for (const s of CARD_SECTIONS) {
+        for (const f of s.fields) if (f.key === key) return f;
+    }
+    return null;
+}
+function isHideable(key) { const f = findCardField(key); return !!(f && f.hideable); }
+function isTypeable(key) { const f = findCardField(key); return !!(f && f.typeable); }
+function fieldHidden(key) { return isHideable(key) && isFieldHidden(key); }
+function naturalType(key) {
+    const f = findCardField(key);
+    if (!f) return 'text';
+    if (f.kind === 'date') return 'date';
+    if (f.kind === 'fixedselect') return 'select';
+    if (f.kind === 'textarea') return 'textarea';
+    return 'text';
+}
+
 // ============================================================
 // Card Template Configuration
 //   expiryDays: per-field warning window (days)
@@ -52,28 +115,16 @@ function normalizeConfig(cfg) {
     };
 }
 
-// Effective type/options/visibility for a built-in date field
+// Effective type/options/visibility for a built-in field
 function builtinType(key) {
-    return (_config.fieldTypes && _config.fieldTypes[key]) || 'date';
+    if (_config.fieldTypes && _config.fieldTypes[key]) return _config.fieldTypes[key];
+    return naturalType(key);
 }
 function builtinOptions(key) {
     return (_config.fieldOptions && _config.fieldOptions[key]) || [];
 }
 function isFieldHidden(key) {
     return !!(_config.hidden && _config.hidden[key]);
-}
-
-// Built-in date fields as full field descriptors (config overrides applied)
-function templateDateFields() {
-    return DATE_FIELDS.map(key => ({
-        key,
-        builtin: true,
-        label: fieldLabel(key),
-        type: builtinType(key),
-        options: builtinOptions(key),
-        expiryDays: getExpiryDays(key),
-        hidden: isFieldHidden(key)
-    }));
 }
 
 // Render a single card-field input (works for built-in and custom fields)
@@ -93,18 +144,62 @@ function cardFieldInput(field, value) {
     return `<label>${escapeText(field.label)}</label><input type="text" name="${name}" value="${escapeText(value)}">`;
 }
 
+// Render one built-in card field as a modal field (or a hidden input if hidden)
+function modalFieldHtml(key, record, opts) {
+    opts = opts || {};
+    const r = record || {};
+    const val = r[key] != null ? r[key] : '';
+    if (fieldHidden(key)) return `<input type="hidden" name="${key}" value="${escapeText(val)}">`;
+    const f = findCardField(key);
+    const type = builtinType(key);
+    const label = escapeText(fieldLabel(key));
+
+    if (f.kind === 'date') {
+        return `<div class="modal-field">${cardFieldInput({ key, builtin: true, label: fieldLabel(key), type, options: builtinOptions(key) }, val)}</div>`;
+    }
+    if (f.kind === 'textarea') {
+        return `<div class="modal-field"><label>${label}</label><textarea name="${key}" rows="5" style="min-height:120px;resize:vertical" placeholder="${escapeText(opts.placeholder || '')}">${String(val).replace(/</g, '&lt;')}</textarea></div>`;
+    }
+    let input;
+    if (f.kind === 'fixedselect') {
+        input = `<select name="${key}">${f.selectOptions.map(o => `<option value="${escapeText(o.v)}" ${o.v === val ? 'selected' : ''}>${escapeText(o.t)}</option>`).join('')}</select>`;
+    } else if (type === 'select') {
+        const o = (builtinOptions(key) || []).map(x => `<option value="${escapeText(x)}" ${x === val ? 'selected' : ''}>${escapeText(x)}</option>`).join('');
+        input = `<select name="${key}"><option value="">-</option>${o}</select>`;
+    } else if (opts.autocomplete) {
+        input = `<input type="text" name="${key}" value="${escapeText(val)}" required autocomplete="off" oninput="showCustomerSuggestions(this)"><div id="customer-suggestions" class="suggestions-dropdown"></div>`;
+    } else {
+        const req = (f.kind === 'identity' || f.required) ? ' required' : '';
+        input = `<input type="text" name="${key}" value="${escapeText(val)}"${req}>`;
+    }
+    const posRel = opts.autocomplete ? ' style="position:relative"' : '';
+    return `<div class="modal-field"${posRel}><label>${label}</label>${input}</div>`;
+}
+
+// Render all fields of a card section as a grid body
+function modalSectionFields(sectionId, record, opts) {
+    opts = opts || {};
+    const sec = CARD_SECTIONS.find(s => s.id === sectionId);
+    return sec.fields.map(f => {
+        const o = {};
+        if (f.key === 'customerName' && opts.autocomplete) o.autocomplete = true;
+        if (f.key === 'address') o.placeholder = 'כתובת הלקוח / מוסך';
+        if (f.key === 'notes') o.placeholder = 'הערות חופשיות לרכב...';
+        return modalFieldHtml(f.key, record, o);
+    }).join('');
+}
+
+// True if every field in a section is hidden (so we can skip its header)
+function sectionAllHidden(sectionId) {
+    const sec = CARD_SECTIONS.find(s => s.id === sectionId);
+    return sec.fields.every(f => fieldHidden(f.key));
+}
+
 // Build the "validity dates" + "custom fields" section shared by add/edit forms
 function templateFieldsHtml(record) {
     const r = record || {};
-    let inner = templateDateFields().map(f => {
-        const val = r[f.key] || '';
-        if (f.hidden) return `<input type="hidden" name="${f.key}" value="${escapeText(val)}">`;
-        return `<div class="modal-field">${cardFieldInput(f, val)}</div>`;
-    }).join('');
-    inner += `<div class="modal-field"><label>תאריך בדיקה</label>${dateFieldHtml('inspectionDate', r.inspectionDate || '')}</div>`;
-
     let html = `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${inner}</div>`;
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${modalSectionFields('dates', r)}</div>`;
 
     const customs = getCustomFields();
     if (customs.length) {
@@ -133,7 +228,7 @@ function collectBuiltinFields(form) {
 // Label for any field (built-in override or custom field)
 function fieldLabel(field) {
     if (_config.labels && _config.labels[field]) return _config.labels[field];
-    if (DEFAULT_FIELD_LABELS[field]) return DEFAULT_FIELD_LABELS[field];
+    if (BUILTIN_LABELS[field]) return BUILTIN_LABELS[field];
     const cf = (_config.customFields || []).find(f => f.key === field);
     return cf ? cf.label : field;
 }
@@ -165,9 +260,9 @@ function allDateFields() {
     return DATE_FIELDS.concat(customDateFields().map(f => f.key));
 }
 
-// Read a date value from a record (built-in column or customFields map)
+// Read a value from a record (built-in column or customFields map)
 function getDateFieldValue(record, field) {
-    if (DEFAULT_FIELD_LABELS[field] || field === 'inspectionDate') return record[field];
+    if (BUILTIN_LABELS[field]) return record[field];
     return (record.customFields || {})[field] || '';
 }
 
@@ -1158,60 +1253,19 @@ function openEditModal(licenseNumber) {
 
     let html = `<form id="edit-form" onsubmit="handleSaveEdit(event)">
         <input type="hidden" name="originalLicense" value="${record.licenseNumber}">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field">
-                <label>שם לקוח</label>
-                <input type="text" name="customerName" value="${record.customerName}" required>
-            </div>
-            <div class="modal-field">
-                <label>מיקום</label>
-                <input type="text" name="location" value="${record.location}" required>
-            </div>
-            <div class="modal-field">
-                <label>מספר רישוי</label>
-                <input type="text" name="licenseNumber" value="${record.licenseNumber}" required>
-            </div>
-            <div class="modal-field">
-                <label>סוג רכב</label>
-                <select name="vehicleType">
-                    <option value="משא" ${record.vehicleType === 'משא' ? 'selected' : ''}>משא</option>
-                    <option value="נגרר" ${record.vehicleType === 'נגרר' ? 'selected' : ''}>נגרר</option>
-                </select>
-            </div>
-        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${modalSectionFields('general', record)}</div>
 
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field">
-                <label>יצרן רכב</label>
-                <input type="text" name="manufacturer" value="${record.manufacturer || ''}">
-            </div>
-            <div class="modal-field">
-                <label>משקל כולל</label>
-                <input type="text" name="totalWeight" value="${record.totalWeight || ''}">
-            </div>
-            <div class="modal-field">
-                <label>מספר ק״מ</label>
-                <input type="text" name="mileage" value="${record.mileage || ''}">
-            </div>
-            <div class="modal-field">
-                <label>מורשה חומ״ס</label>
-                <select name="hazmatCertified">
-                    <option value="" ${!record.hazmatCertified ? 'selected' : ''}>-</option>
-                    <option value="yes" ${record.hazmatCertified === 'yes' ? 'selected' : ''}>כן</option>
-                    <option value="no" ${record.hazmatCertified === 'no' ? 'selected' : ''}>לא</option>
-                </select>
-            </div>
-        </div>
+        ${sectionAllHidden('vehicle') ? '' : `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${modalSectionFields('vehicle', record)}</div>`}
 
         ${templateFieldsHtml(record)}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
-        <div class="modal-field"><label>כתובת</label><input type="text" name="address" value="${escapeText(record.address || '')}" placeholder="כתובת הלקוח / מוסך"></div>
+        ${modalSectionFields('contact', record)}
         ${contactsEditorHtml()}
 
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
-        <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב...">${(record.notes || '').replace(/</g, '&lt;')}</textarea></div>
+        ${sectionAllHidden('notes') ? '' : `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">${escapeText(fieldLabel('notes'))}</h4>
+        ${modalFieldHtml('notes', record, { placeholder: 'הערות חופשיות לרכב...' })}`}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">ליקויים</h4>
         <div id="deficiencies-list">${tempDeficiencies.map((d, i) => renderDeficiencyItem(d, i)).join('')}</div>
@@ -1324,25 +1378,27 @@ function openViewModal(licenseNumber) {
             <span class="view-value date-${status}">${formatDate(val)} <span class="text-xs">(${statusLabel(status)})</span></span></div>`;
     };
 
-    const hazmat = record.hazmatCertified === 'yes' ? 'כן' : record.hazmatCertified === 'no' ? 'לא' : '';
+    const valueFor = (key) => {
+        if (key === 'hazmatCertified') return record.hazmatCertified === 'yes' ? 'כן' : record.hazmatCertified === 'no' ? 'לא' : '';
+        return escapeText(record[key] || '');
+    };
+    const fieldRow = (key) => {
+        if (fieldHidden(key)) return '';
+        const label = fieldLabel(key);
+        if (key === 'inspectionDate') return row(label, record.inspectionDate ? formatDate(record.inspectionDate) : '');
+        if (builtinType(key) === 'date') return dateRow(key, label);
+        return row(label, valueFor(key));
+    };
+    const sectionRows = (id) => {
+        if (sectionAllHidden(id)) return '';
+        const sec = CARD_SECTIONS.find(s => s.id === id);
+        return `<div class="view-section-title">${escapeText(sec.title)}</div>` + sec.fields.map(f => fieldRow(f.key)).join('');
+    };
 
     let html = `<div class="view-card">
-        <div class="view-section-title">פרטים כלליים</div>
-        ${row('שם לקוח', escapeText(record.customerName))}
-        ${row('מיקום', escapeText(record.location))}
-        ${row('מספר רישוי', escapeText(record.licenseNumber))}
-        ${row('סוג רכב', escapeText(record.vehicleType))}
-
-        <div class="view-section-title">פרטי רכב</div>
-        ${row('יצרן רכב', escapeText(record.manufacturer))}
-        ${row('משקל כולל', escapeText(record.totalWeight))}
-        ${row('מספר ק״מ', escapeText(record.mileage))}
-        ${row('מורשה חומ״ס', hazmat)}
-
-        <div class="view-section-title">תאריכי תוקף</div>
-        ${templateDateFields().filter(f => !f.hidden).map(f =>
-            f.type === 'date' ? dateRow(f.key, f.label) : row(f.label, escapeText(record[f.key] || ''))).join('')}
-        ${row('תאריך בדיקה אחרון', record.inspectionDate ? formatDate(record.inspectionDate) : '')}`;
+        ${sectionRows('general')}
+        ${sectionRows('vehicle')}
+        ${sectionRows('dates')}`;
 
     const customFields = getCustomFields();
     if (customFields.length) {
@@ -1353,20 +1409,19 @@ function openViewModal(licenseNumber) {
         });
     }
 
-    html += `<div class="view-section-title">איש קשר</div>
-        ${row('כתובת', escapeText(record.address))}`;
     const contacts = getContacts(record);
-    if (contacts.length) {
+    const addressHidden = fieldHidden('address');
+    if (!addressHidden || contacts.length) {
+        html += `<div class="view-section-title">איש קשר</div>`;
+        if (!addressHidden) html += row(fieldLabel('address'), escapeText(record.address));
         contacts.forEach(c => {
             const phone = c.phone ? `<a href="tel:${c.phone}" class="text-blue-600">${escapeText(c.phone)}</a>` : '';
             html += row(c.name || 'איש קשר', phone);
         });
-    } else {
-        html += row('אנשי קשר', '');
     }
 
-    if ((record.notes || '').trim()) {
-        html += `<div class="view-section-title">הערות</div>
+    if (!fieldHidden('notes') && (record.notes || '').trim()) {
+        html += `<div class="view-section-title">${escapeText(fieldLabel('notes'))}</div>
             <div class="view-notes">${escapeText(record.notes).replace(/\n/g, '<br>')}</div>`;
     }
 
@@ -1465,32 +1520,19 @@ function showAddForm() {
     tempContacts = [{ name: '', phone: '' }];
 
     let html = `<form id="add-form" onsubmit="handleAddRecord(event)">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field" style="position:relative"><label>שם לקוח</label><input type="text" name="customerName" required autocomplete="off" oninput="showCustomerSuggestions(this)"><div id="customer-suggestions" class="suggestions-dropdown"></div></div>
-            <div class="modal-field"><label>מיקום</label><input type="text" name="location" required></div>
-            <div class="modal-field"><label>מספר רישוי</label><input type="text" name="licenseNumber" required></div>
-            <div class="modal-field">
-                <label>סוג רכב</label>
-                <select name="vehicleType"><option value="משא">משא</option><option value="נגרר">נגרר</option></select>
-            </div>
-        </div>
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>יצרן רכב</label><input type="text" name="manufacturer"></div>
-            <div class="modal-field"><label>משקל כולל</label><input type="text" name="totalWeight"></div>
-            <div class="modal-field"><label>מספר ק״מ</label><input type="text" name="mileage"></div>
-            <div class="modal-field">
-                <label>מורשה חומ״ס</label>
-                <select name="hazmatCertified"><option value="">-</option><option value="yes">כן</option><option value="no">לא</option></select>
-            </div>
-        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${modalSectionFields('general', null, { autocomplete: true })}</div>
+
+        ${sectionAllHidden('vehicle') ? '' : `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">פרטי רכב</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${modalSectionFields('vehicle', null)}</div>`}
+
         ${templateFieldsHtml(null)}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
-        <div class="modal-field"><label>כתובת</label><input type="text" name="address" placeholder="כתובת הלקוח / מוסך"></div>
+        ${modalSectionFields('contact', null)}
         ${contactsEditorHtml()}
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
-        <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב..."></textarea></div>
+
+        ${sectionAllHidden('notes') ? '' : `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">${escapeText(fieldLabel('notes'))}</h4>
+        ${modalFieldHtml('notes', null, { placeholder: 'הערות חופשיות לרכב...' })}`}
         <div class="flex gap-3 mt-4 pt-3 border-t">
             <button type="submit" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-medium text-base">הוסף</button>
             <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">ביטול</button>
@@ -1664,7 +1706,9 @@ function showTemplateEditor() {
 }
 
 function renderTemplateEditor() {
-    const builtinRows = DATE_FIELDS.map(f => builtinFieldEditorRow(f)).join('');
+    const sectionsHtml = CARD_SECTIONS.map(sec =>
+        `<h4 class="font-bold text-sm mt-3 mb-2 text-gray-700 border-b pb-1">${escapeText(sec.title)}</h4>
+        ${sec.fields.map(f => cardFieldEditorRow(f.key)).join('')}`).join('');
 
     const customRows = tempConfig.customFields.length
         ? tempConfig.customFields.map((cf, i) => customFieldEditorRow(cf, i)).join('')
@@ -1673,10 +1717,9 @@ function renderTemplateEditor() {
     const html = `
         <p class="text-xs text-gray-500 mb-3">שינוי שמות שדות, סוג השדה, ערכים לבחירה, מספר הימים לפני שתאריך נחשב כ"פג תוקף" (התראה), הסתרת שדות והוספת שדות חדשים לכרטיס הרכב.</p>
 
-        <h4 class="font-bold text-sm mt-2 mb-2 text-gray-700 border-b pb-1">שדות קיימים</h4>
-        ${builtinRows}
+        ${sectionsHtml}
 
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים שהוספת</h4>
         <div id="tpl-custom-list">${customRows}</div>
         <button type="button" onclick="tplAddCustomField()" class="text-blue-600 text-base mt-1 py-2 hover:underline font-medium">+ הוסף שדה</button>
 
@@ -1687,31 +1730,41 @@ function renderTemplateEditor() {
     document.getElementById('modal-content').innerHTML = html;
 }
 
-// Editor row for a built-in field — same controls as a new (custom) field
-function builtinFieldEditorRow(key) {
-    const label = tempConfig.labels[key] != null ? tempConfig.labels[key] : DEFAULT_FIELD_LABELS[key];
-    const type = tempConfig.fieldTypes[key] || 'date';
+// Editor row for a built-in field — controls depend on the field's kind
+function cardFieldEditorRow(key) {
+    const f = findCardField(key);
+    const label = tempConfig.labels[key] != null ? tempConfig.labels[key] : BUILTIN_LABELS[key];
+    const type = tempConfig.fieldTypes[key] || naturalType(key);
     const days = tempConfig.expiryDays[key] != null ? tempConfig.expiryDays[key] : DEFAULT_EXPIRY_DAYS;
     const options = (tempConfig.fieldOptions[key] || []).join(', ');
-    const hidden = !!tempConfig.hidden[key];
+    const hidden = !!(tempConfig.hidden[key] && f.hideable);
+
+    let typeDropdown = '';
+    if (f.typeable) {
+        typeDropdown = `<select onchange="tplSetBuiltinType('${key}', this.value)">
+            ${f.kind === 'date' ? `<option value="date" ${type === 'date' ? 'selected' : ''}>תאריך</option>` : ''}
+            <option value="text" ${type === 'text' ? 'selected' : ''}>טקסט</option>
+            <option value="select" ${type === 'select' ? 'selected' : ''}>בחירה מרשימה</option>
+        </select>`;
+    }
+    const hideBtn = f.hideable
+        ? `<button type="button" onclick="tplToggleHidden('${key}')" class="tpl-eye-btn" title="${hidden ? 'הצג בכרטיס' : 'הסתר מהכרטיס'}">${hidden ? '&#128683;' : '&#128065;'}</button>`
+        : '<span class="tpl-locked" title="שדה חובה — לא ניתן להסתרה">&#128274;</span>';
+
     return `<div class="tpl-custom-row ${hidden ? 'tpl-hidden' : ''}">
         <div class="tpl-custom-main">
-            <input type="text" value="${escapeText(label)}" placeholder="${escapeText(DEFAULT_FIELD_LABELS[key])}"
+            <input type="text" value="${escapeText(label)}" placeholder="${escapeText(BUILTIN_LABELS[key] || '')}"
                 oninput="tplSetLabel('${key}', this.value)" class="tpl-label">
-            <select onchange="tplSetBuiltinType('${key}', this.value)">
-                <option value="date" ${type === 'date' ? 'selected' : ''}>תאריך</option>
-                <option value="text" ${type === 'text' ? 'selected' : ''}>טקסט</option>
-                <option value="select" ${type === 'select' ? 'selected' : ''}>בחירה מרשימה</option>
-            </select>
-            <button type="button" onclick="tplToggleHidden('${key}')" class="tpl-eye-btn" title="${hidden ? 'הצג בכרטיס' : 'הסתר מהכרטיס'}">${hidden ? '&#128683;' : '&#128065;'}</button>
+            ${typeDropdown}
+            ${hideBtn}
         </div>
         ${type === 'date' ? `<div class="tpl-days"><input type="number" min="0" value="${days}" oninput="tplSetDays('${key}', this.value)"><span>ימים להתראה</span></div>` : ''}
-        ${type === 'select' ? `<input type="text" value="${escapeText(options)}" placeholder="ערכים מופרדים בפסיק" oninput="tplSetBuiltinOptions('${key}', this.value)" class="tpl-options">` : ''}
+        ${(type === 'select' && f.typeable) ? `<input type="text" value="${escapeText(options)}" placeholder="ערכים מופרדים בפסיק" oninput="tplSetBuiltinOptions('${key}', this.value)" class="tpl-options">` : ''}
     </div>`;
 }
 
 function tplSetBuiltinType(key, type) {
-    if (type === 'date') delete tempConfig.fieldTypes[key];
+    if (type === naturalType(key)) delete tempConfig.fieldTypes[key];
     else tempConfig.fieldTypes[key] = type;
     if (type === 'select' && !Array.isArray(tempConfig.fieldOptions[key])) tempConfig.fieldOptions[key] = [];
     renderTemplateEditor();
