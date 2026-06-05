@@ -1382,7 +1382,6 @@ function openViewModal(licenseNumber) {
 
     html += `</div>
         <div class="flex gap-3 mt-4 pt-3 border-t">
-            <button type="button" onclick="openEditModal('${record.licenseNumber}')" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-base">עריכה</button>
             <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">סגור</button>
         </div>`;
 
