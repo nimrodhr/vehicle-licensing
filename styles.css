@@ -703,6 +703,22 @@
     box-sizing: border-box;
 }
 .tpl-custom-row .tpl-days { margin-top: 0.4rem; }
+.tpl-eye-btn {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 0.5rem;
+    padding: 0 0.6rem;
+    height: 42px;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #3730a3;
+}
+.tpl-eye-btn:hover { background: #e0e7ff; }
+.tpl-custom-row.tpl-hidden {
+    opacity: 0.55;
+    background: #f3f4f6;
+}
+.tpl-custom-row.tpl-hidden .tpl-label { text-decoration: line-through; }
 
 /* Expandable row detail */
 .vehicle-detail {

@@ -45,8 +45,89 @@ function normalizeConfig(cfg) {
     return {
         expiryDays: cfg.expiryDays || {},
         labels: cfg.labels || {},
+        fieldTypes: cfg.fieldTypes || {},   // built-in field type overrides
+        fieldOptions: cfg.fieldOptions || {}, // built-in select options
+        hidden: cfg.hidden || {},           // built-in fields hidden from the card
         customFields: Array.isArray(cfg.customFields) ? cfg.customFields : []
     };
+}
+
+// Effective type/options/visibility for a built-in date field
+function builtinType(key) {
+    return (_config.fieldTypes && _config.fieldTypes[key]) || 'date';
+}
+function builtinOptions(key) {
+    return (_config.fieldOptions && _config.fieldOptions[key]) || [];
+}
+function isFieldHidden(key) {
+    return !!(_config.hidden && _config.hidden[key]);
+}
+
+// Built-in date fields as full field descriptors (config overrides applied)
+function templateDateFields() {
+    return DATE_FIELDS.map(key => ({
+        key,
+        builtin: true,
+        label: fieldLabel(key),
+        type: builtinType(key),
+        options: builtinOptions(key),
+        expiryDays: getExpiryDays(key),
+        hidden: isFieldHidden(key)
+    }));
+}
+
+// Render a single card-field input (works for built-in and custom fields)
+function cardFieldInput(field, value) {
+    const name = field.builtin ? field.key : 'cf_' + field.key;
+    value = value || '';
+    if (field.type === 'date') {
+        const status = getDateStatus(value, field.key);
+        const tag = value ? ` <span class="date-${status} text-xs">(${statusLabel(status)})</span>` : '';
+        return `<label>${escapeText(field.label)}${tag}</label>${dateFieldHtml(name, value)}`;
+    }
+    if (field.type === 'select') {
+        const opts = (field.options || []).map(o =>
+            `<option value="${escapeText(o)}" ${o === value ? 'selected' : ''}>${escapeText(o)}</option>`).join('');
+        return `<label>${escapeText(field.label)}</label><select name="${name}"><option value="">-</option>${opts}</select>`;
+    }
+    return `<label>${escapeText(field.label)}</label><input type="text" name="${name}" value="${escapeText(value)}">`;
+}
+
+// Build the "validity dates" + "custom fields" section shared by add/edit forms
+function templateFieldsHtml(record) {
+    const r = record || {};
+    let inner = templateDateFields().map(f => {
+        const val = r[f.key] || '';
+        if (f.hidden) return `<input type="hidden" name="${f.key}" value="${escapeText(val)}">`;
+        return `<div class="modal-field">${cardFieldInput(f, val)}</div>`;
+    }).join('');
+    inner += `<div class="modal-field"><label>תאריך בדיקה</label>${dateFieldHtml('inspectionDate', r.inspectionDate || '')}</div>`;
+
+    let html = `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${inner}</div>`;
+
+    const customs = getCustomFields();
+    if (customs.length) {
+        html += `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
+        customs.forEach(f => {
+            const val = (r.customFields || {})[f.key] || '';
+            html += `<div class="modal-field">${cardFieldInput({ key: f.key, builtin: false, label: f.label, type: f.type, options: f.options }, val)}</div>`;
+        });
+        html += `</div>`;
+    }
+    return html;
+}
+
+// Collect built-in date-field values from a form, respecting each field's type
+function collectBuiltinFields(form) {
+    const out = {};
+    DATE_FIELDS.forEach(key => {
+        const el = form.elements[key];
+        if (!el) return;
+        out[key] = builtinType(key) === 'date' ? parseDateInput(el.value) : el.value;
+    });
+    return out;
 }
 
 // Label for any field (built-in override or custom field)
@@ -1047,35 +1128,8 @@ function collectContacts() {
 }
 
 // ============================================================
-// Custom field inputs (shared by add + edit forms)
+// Custom field value collection
 // ============================================================
-
-function customFieldsInputsHtml(record) {
-    const fields = getCustomFields();
-    if (!fields.length) return '';
-    const values = (record && record.customFields) || {};
-    let html = `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
-    fields.forEach(f => {
-        const name = 'cf_' + f.key;
-        const val = values[f.key] != null ? values[f.key] : '';
-        let input;
-        if (f.type === 'date') {
-            const status = getDateStatus(val, f.key);
-            const statusTag = val ? ` <span class="date-${status} text-xs">(${statusLabel(status)})</span>` : '';
-            input = `<label>${escapeText(f.label)}${statusTag}</label>${dateFieldHtml(name, val)}`;
-        } else if (f.type === 'select') {
-            const opts = (f.options || []).map(o =>
-                `<option value="${escapeText(o)}" ${o === val ? 'selected' : ''}>${escapeText(o)}</option>`).join('');
-            input = `<label>${escapeText(f.label)}</label><select name="${name}"><option value="">-</option>${opts}</select>`;
-        } else {
-            input = `<label>${escapeText(f.label)}</label><input type="text" name="${name}" value="${escapeText(val)}">`;
-        }
-        html += `<div class="modal-field">${input}</div>`;
-    });
-    html += `</div>`;
-    return html;
-}
 
 function collectCustomFields(form) {
     const out = {};
@@ -1101,9 +1155,6 @@ function openEditModal(licenseNumber) {
     tempDeficiencies = JSON.parse(JSON.stringify(defs[record.licenseNumber] || []));
     tempContacts = getContacts(record).map(c => ({ name: c.name, phone: c.phone }));
     if (!tempContacts.length) tempContacts = [{ name: '', phone: '' }];
-
-    const dateFieldEntries = DATE_FIELDS.map(f => [f, fieldLabel(f)])
-        .concat([['inspectionDate', 'תאריך בדיקה']]);
 
     let html = `<form id="edit-form" onsubmit="handleSaveEdit(event)">
         <input type="hidden" name="originalLicense" value="${record.licenseNumber}">
@@ -1153,21 +1204,7 @@ function openEditModal(licenseNumber) {
             </div>
         </div>
 
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
-
-    dateFieldEntries.forEach(([field, label]) => {
-        const status = getDateStatus(record[field], field);
-        const statusClass = field !== 'inspectionDate' ? `date-${status}` : '';
-        html += `<div class="modal-field">
-            <label>${escapeText(label)} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
-            ${dateFieldHtml(field, record[field])}
-        </div>`;
-    });
-
-    html += `</div>
-
-        ${customFieldsInputsHtml(record)}
+        ${templateFieldsHtml(record)}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
         <div class="modal-field"><label>כתובת</label><input type="text" name="address" value="${escapeText(record.address || '')}" placeholder="כתובת הלקוח / מוסך"></div>
@@ -1240,14 +1277,7 @@ async function handleSaveEdit(event) {
         totalWeight: form.elements.totalWeight.value,
         mileage: form.elements.mileage.value,
         hazmatCertified: form.elements.hazmatCertified.value,
-        licenseExpiry: parseDateInput(form.elements.licenseExpiry.value),
-        mandatoryInsurance: parseDateInput(form.elements.mandatoryInsurance.value),
-        calibrationExpiry: parseDateInput(form.elements.calibrationExpiry.value),
-        brakeTestExpiry: parseDateInput(form.elements.brakeTestExpiry.value),
-        carrierLicense: parseDateInput(form.elements.carrierLicense.value),
-        rampCraneInspection: parseDateInput(form.elements.rampCraneInspection.value),
-        winterInspection: parseDateInput(form.elements.winterInspection.value),
-        carrierLicenseSigned: parseDateInput(form.elements.carrierLicenseSigned.value),
+        ...collectBuiltinFields(form),
         inspectionDate: parseDateInput(form.elements.inspectionDate.value),
         address: form.elements.address ? form.elements.address.value : '',
         contacts: collectContacts(),
@@ -1310,7 +1340,8 @@ function openViewModal(licenseNumber) {
         ${row('מורשה חומ״ס', hazmat)}
 
         <div class="view-section-title">תאריכי תוקף</div>
-        ${DATE_FIELDS.map(f => dateRow(f, fieldLabel(f))).join('')}
+        ${templateDateFields().filter(f => !f.hidden).map(f =>
+            f.type === 'date' ? dateRow(f.key, f.label) : row(f.label, escapeText(record[f.key] || ''))).join('')}
         ${row('תאריך בדיקה אחרון', record.inspectionDate ? formatDate(record.inspectionDate) : '')}`;
 
     const customFields = getCustomFields();
@@ -1434,8 +1465,6 @@ function showAddForm() {
     tempDeficiencies = [];
     tempContacts = [{ name: '', phone: '' }];
 
-    const addDateFields = DATE_FIELDS.map(f => [f, fieldLabel(f)]).concat([['inspectionDate', 'תאריך בדיקה']]);
-
     let html = `<form id="add-form" onsubmit="handleAddRecord(event)">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="modal-field" style="position:relative"><label>שם לקוח</label><input type="text" name="customerName" required autocomplete="off" oninput="showCustomerSuggestions(this)"><div id="customer-suggestions" class="suggestions-dropdown"></div></div>
@@ -1456,12 +1485,7 @@ function showAddForm() {
                 <select name="hazmatCertified"><option value="">-</option><option value="yes">כן</option><option value="no">לא</option></select>
             </div>
         </div>
-        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            ${addDateFields.map(([f, label]) => `<div class="modal-field"><label>${escapeText(label)}</label>${dateFieldHtml(f, '')}</div>`).join('')}
-        </div>
-
-        ${customFieldsInputsHtml(null)}
+        ${templateFieldsHtml(null)}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
         <div class="modal-field"><label>כתובת</label><input type="text" name="address" placeholder="כתובת הלקוח / מוסך"></div>
@@ -1482,15 +1506,12 @@ async function handleAddRecord(event) {
     event.preventDefault();
     const form = event.target;
     const record = {};
-    const dateFields = ['licenseExpiry', 'mandatoryInsurance',
-     'calibrationExpiry', 'brakeTestExpiry', 'carrierLicense', 'rampCraneInspection', 'winterInspection', 'carrierLicenseSigned', 'inspectionDate'];
     ['customerName', 'location', 'licenseNumber', 'vehicleType',
-     'manufacturer', 'totalWeight', 'mileage', 'hazmatCertified',
-     ...dateFields, 'address', 'notes'
-    ].forEach(f => {
-        const val = form.elements[f]?.value || '';
-        record[f] = dateFields.includes(f) ? parseDateInput(val) : val;
-    });
+     'manufacturer', 'totalWeight', 'mileage', 'hazmatCertified', 'address', 'notes'
+    ].forEach(f => { record[f] = form.elements[f]?.value || ''; });
+
+    Object.assign(record, collectBuiltinFields(form));
+    record.inspectionDate = parseDateInput(form.elements.inspectionDate?.value || '');
 
     record.contacts = collectContacts();
     record.contactName = record.contacts[0] ? record.contacts[0].name : '';
@@ -1644,28 +1665,16 @@ function showTemplateEditor() {
 }
 
 function renderTemplateEditor() {
-    const builtinRows = DATE_FIELDS.map(f => {
-        const label = tempConfig.labels[f] != null ? tempConfig.labels[f] : '';
-        const days = tempConfig.expiryDays[f] != null ? tempConfig.expiryDays[f] : DEFAULT_EXPIRY_DAYS;
-        return `<div class="tpl-row">
-            <input type="text" value="${escapeText(label)}" placeholder="${escapeText(DEFAULT_FIELD_LABELS[f])}"
-                oninput="tplSetLabel('${f}', this.value)" class="tpl-label">
-            <div class="tpl-days">
-                <input type="number" min="0" value="${days}" oninput="tplSetDays('${f}', this.value)">
-                <span>ימים</span>
-            </div>
-        </div>`;
-    }).join('');
+    const builtinRows = DATE_FIELDS.map(f => builtinFieldEditorRow(f)).join('');
 
     const customRows = tempConfig.customFields.length
         ? tempConfig.customFields.map((cf, i) => customFieldEditorRow(cf, i)).join('')
         : '<div class="text-xs text-gray-400 mb-2">אין שדות נוספים. ניתן להוסיף שדה חדש למטה.</div>';
 
     const html = `
-        <p class="text-xs text-gray-500 mb-3">שינוי שמות שדות, הגדרת מספר הימים לפני שתאריך נחשב כ"פג תוקף" (התראה), והוספת שדות חדשים לכרטיס הרכב.</p>
+        <p class="text-xs text-gray-500 mb-3">שינוי שמות שדות, סוג השדה, ערכים לבחירה, מספר הימים לפני שתאריך נחשב כ"פג תוקף" (התראה), הסתרת שדות והוספת שדות חדשים לכרטיס הרכב.</p>
 
-        <h4 class="font-bold text-sm mt-2 mb-2 text-gray-700 border-b pb-1">שדות תאריך קיימים</h4>
-        <div class="tpl-head"><span>שם השדה</span><span>התראה לפני (ימים)</span></div>
+        <h4 class="font-bold text-sm mt-2 mb-2 text-gray-700 border-b pb-1">שדות קיימים</h4>
         ${builtinRows}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
@@ -1677,6 +1686,46 @@ function renderTemplateEditor() {
             <button type="button" onclick="showSettings()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">חזרה</button>
         </div>`;
     document.getElementById('modal-content').innerHTML = html;
+}
+
+// Editor row for a built-in field — same controls as a new (custom) field
+function builtinFieldEditorRow(key) {
+    const label = tempConfig.labels[key] != null ? tempConfig.labels[key] : DEFAULT_FIELD_LABELS[key];
+    const type = tempConfig.fieldTypes[key] || 'date';
+    const days = tempConfig.expiryDays[key] != null ? tempConfig.expiryDays[key] : DEFAULT_EXPIRY_DAYS;
+    const options = (tempConfig.fieldOptions[key] || []).join(', ');
+    const hidden = !!tempConfig.hidden[key];
+    return `<div class="tpl-custom-row ${hidden ? 'tpl-hidden' : ''}">
+        <div class="tpl-custom-main">
+            <input type="text" value="${escapeText(label)}" placeholder="${escapeText(DEFAULT_FIELD_LABELS[key])}"
+                oninput="tplSetLabel('${key}', this.value)" class="tpl-label">
+            <select onchange="tplSetBuiltinType('${key}', this.value)">
+                <option value="date" ${type === 'date' ? 'selected' : ''}>תאריך</option>
+                <option value="text" ${type === 'text' ? 'selected' : ''}>טקסט</option>
+                <option value="select" ${type === 'select' ? 'selected' : ''}>בחירה מרשימה</option>
+            </select>
+            <button type="button" onclick="tplToggleHidden('${key}')" class="tpl-eye-btn" title="${hidden ? 'הצג בכרטיס' : 'הסתר מהכרטיס'}">${hidden ? '&#128683;' : '&#128065;'}</button>
+        </div>
+        ${type === 'date' ? `<div class="tpl-days"><input type="number" min="0" value="${days}" oninput="tplSetDays('${key}', this.value)"><span>ימים להתראה</span></div>` : ''}
+        ${type === 'select' ? `<input type="text" value="${escapeText(options)}" placeholder="ערכים מופרדים בפסיק" oninput="tplSetBuiltinOptions('${key}', this.value)" class="tpl-options">` : ''}
+    </div>`;
+}
+
+function tplSetBuiltinType(key, type) {
+    if (type === 'date') delete tempConfig.fieldTypes[key];
+    else tempConfig.fieldTypes[key] = type;
+    if (type === 'select' && !Array.isArray(tempConfig.fieldOptions[key])) tempConfig.fieldOptions[key] = [];
+    renderTemplateEditor();
+}
+
+function tplSetBuiltinOptions(key, value) {
+    tempConfig.fieldOptions[key] = value.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function tplToggleHidden(key) {
+    if (tempConfig.hidden[key]) delete tempConfig.hidden[key];
+    else tempConfig.hidden[key] = true;
+    renderTemplateEditor();
 }
 
 function customFieldEditorRow(cf, i) {
