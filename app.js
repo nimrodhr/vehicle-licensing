@@ -14,8 +14,11 @@ let _isLoading = false;
 // Work page sort state
 let _workSort = { column: 'inspectionDate', direction: 'asc' };
 
-// Field labels in Hebrew
-const FIELD_LABELS = {
+// Default number of days before an expiry date that a field starts warning
+const DEFAULT_EXPIRY_DAYS = 30;
+
+// Default (built-in) labels in Hebrew
+const DEFAULT_FIELD_LABELS = {
     licenseExpiry: 'תוקף רישוי',
     mandatoryInsurance: 'ביטוח חובה',
     calibrationExpiry: 'כיול',
@@ -26,7 +29,109 @@ const FIELD_LABELS = {
     carrierLicenseSigned: 'נחתם רישיון מוביל עד'
 };
 
-const DATE_FIELDS = Object.keys(FIELD_LABELS);
+const DATE_FIELDS = Object.keys(DEFAULT_FIELD_LABELS);
+
+// ============================================================
+// Card Template Configuration
+//   expiryDays: per-field warning window (days)
+//   labels:     label overrides for built-in date fields
+//   customFields: user-added fields [{key,label,type,options,expiryDays}]
+// ============================================================
+
+let _config = { expiryDays: {}, labels: {}, customFields: [] };
+
+function normalizeConfig(cfg) {
+    cfg = cfg || {};
+    return {
+        expiryDays: cfg.expiryDays || {},
+        labels: cfg.labels || {},
+        customFields: Array.isArray(cfg.customFields) ? cfg.customFields : []
+    };
+}
+
+// Label for any field (built-in override or custom field)
+function fieldLabel(field) {
+    if (_config.labels && _config.labels[field]) return _config.labels[field];
+    if (DEFAULT_FIELD_LABELS[field]) return DEFAULT_FIELD_LABELS[field];
+    const cf = (_config.customFields || []).find(f => f.key === field);
+    return cf ? cf.label : field;
+}
+
+// Warning window (days) for a given date field
+function getExpiryDays(field) {
+    if (field && _config.expiryDays && _config.expiryDays[field] != null) {
+        const n = parseInt(_config.expiryDays[field], 10);
+        if (!isNaN(n) && n >= 0) return n;
+    }
+    const cf = (_config.customFields || []).find(f => f.key === field);
+    if (cf && cf.expiryDays != null) {
+        const n = parseInt(cf.expiryDays, 10);
+        if (!isNaN(n) && n >= 0) return n;
+    }
+    return DEFAULT_EXPIRY_DAYS;
+}
+
+function getCustomFields() {
+    return _config.customFields || [];
+}
+
+function customDateFields() {
+    return getCustomFields().filter(f => f.type === 'date');
+}
+
+// All date fields (built-in + custom) used for worst-status calculations
+function allDateFields() {
+    return DATE_FIELDS.concat(customDateFields().map(f => f.key));
+}
+
+// Read a date value from a record (built-in column or customFields map)
+function getDateFieldValue(record, field) {
+    if (DEFAULT_FIELD_LABELS[field] || field === 'inspectionDate') return record[field];
+    return (record.customFields || {})[field] || '';
+}
+
+// ============================================================
+// Phone helpers — Israeli numbers must keep their leading 0
+// ============================================================
+
+function normalizePhone(phone) {
+    let p = String(phone == null ? '' : phone).trim();
+    if (!p) return '';
+    // Recover a leading zero stripped by spreadsheet number formatting
+    if (/^\d+$/.test(p) && !p.startsWith('0') && (p.length === 8 || p.length === 9)) {
+        p = '0' + p;
+    }
+    return p;
+}
+
+// Normalize a record's contacts into [{name, phone}] (back-compat with the
+// old single contactName / contactPhone columns).
+function getContacts(record) {
+    let list = Array.isArray(record.contacts) ? record.contacts.slice() : [];
+    list = list
+        .map(c => ({ name: (c.name || '').trim(), phone: normalizePhone(c.phone) }))
+        .filter(c => c.name || c.phone);
+    if (!list.length && (record.contactName || record.contactPhone)) {
+        list = [{ name: (record.contactName || '').trim(), phone: normalizePhone(record.contactPhone) }];
+    }
+    return list;
+}
+
+// Compact contacts rendering for table cells
+function renderContactsInline(record) {
+    const contacts = getContacts(record);
+    if (!contacts.length) return '<div class="text-xs text-gray-400">-</div>';
+    return contacts.map(c => `
+        <div class="contact-line text-xs">
+            ${c.name ? `<span>${escapeText(c.name)}</span>` : ''}
+            ${c.phone ? `<a href="tel:${c.phone}" class="text-blue-600">${escapeText(c.phone)}</a>` : ''}
+        </div>`).join('');
+}
+
+function escapeText(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 // ============================================================
 // API Communication
@@ -58,15 +163,24 @@ async function apiAction(action, params) {
 async function loadAllData() {
     showLoading(true);
     try {
-        const [vehicleResp, defResp, sheetNameResp] = await Promise.all([
+        const [vehicleResp, defResp, sheetNameResp, configResp] = await Promise.all([
             apiGet('getData'),
             apiGet('getDeficiencies'),
-            apiGet('getSheetName')
+            apiGet('getSheetName'),
+            apiGet('getConfig').catch(() => null)
         ]);
 
         if (vehicleResp.error) throw new Error(vehicleResp.error);
         _vehicleData = vehicleResp.data || [];
         _deficiencyData = (defResp.data) || {};
+
+        // Prefer server-stored template config; fall back to local cache
+        if (configResp && configResp.config) {
+            _config = normalizeConfig(configResp.config);
+            localStorage.setItem('fleet_card_config', JSON.stringify(_config));
+        } else {
+            loadConfigFromCache();
+        }
 
         const sheetName = sheetNameResp && sheetNameResp.name ? sheetNameResp.name : 'Google Sheets';
         showStatus(`מחובר ל-${sheetName}`, false);
@@ -86,6 +200,29 @@ function getData() {
 
 function loadDeficiencies() {
     return _deficiencyData;
+}
+
+function loadConfigFromCache() {
+    try {
+        const cached = localStorage.getItem('fleet_card_config');
+        _config = normalizeConfig(cached ? JSON.parse(cached) : null);
+    } catch (err) {
+        _config = normalizeConfig(null);
+    }
+}
+
+async function saveConfig(newConfig) {
+    _config = normalizeConfig(newConfig);
+    localStorage.setItem('fleet_card_config', JSON.stringify(_config));
+    try {
+        const result = await apiAction('saveConfig', { data: JSON.stringify(_config) });
+        if (result.error) throw new Error(result.error);
+        showSaveIndicator('תבנית הכרטיס נשמרה');
+        return true;
+    } catch (err) {
+        showSaveIndicator('שגיאה בשמירת התבנית: ' + err.message, true);
+        return false;
+    }
 }
 
 // ============================================================
@@ -175,22 +312,22 @@ function daysUntil(dateStr) {
     return Math.ceil((d - now) / (1000 * 60 * 60 * 24));
 }
 
-function getDateStatus(dateStr) {
+function getDateStatus(dateStr, field) {
     if (!dateStr) return 'empty';
     const days = daysUntil(dateStr);
     if (days < 0) return 'expired';
     if (days <= 2) return 'critical';
-    if (days <= 30) return 'warning';
+    if (days <= getExpiryDays(field)) return 'warning';
     return 'valid';
 }
 
 function getRecordWorstStatus(record) {
     let worst = 'valid';
     const priority = { expired: 0, critical: 1, warning: 2, valid: 3, empty: 4 };
-    for (const field of DATE_FIELDS) {
-        const val = record[field];
+    for (const field of allDateFields()) {
+        const val = getDateFieldValue(record, field);
         if (!val) continue;
-        const status = getDateStatus(val);
+        const status = getDateStatus(val, field);
         if (status === 'empty') continue;
         if (priority[status] < priority[worst]) {
             worst = status;
@@ -551,17 +688,20 @@ function toggleCustomerExpand(row, customerName) {
             <td>${v.totalWeight || '-'}</td>
             <td>${v.mileage || '-'}</td>
             <td>${v.hazmatCertified === 'yes' ? 'כן' : v.hazmatCertified === 'no' ? 'לא' : '-'}</td>
-            <td class="date-${getDateStatus(v.licenseExpiry)}">${formatDate(v.licenseExpiry)}</td>
-            <td class="date-${getDateStatus(v.mandatoryInsurance)}">${formatDate(v.mandatoryInsurance)}</td>
-            <td class="date-${getDateStatus(v.calibrationExpiry)}">${formatDate(v.calibrationExpiry)}</td>
-            <td class="date-${getDateStatus(v.brakeTestExpiry)}">${formatDate(v.brakeTestExpiry)}</td>
-            <td class="date-${getDateStatus(v.carrierLicense)}">${formatDate(v.carrierLicense)}</td>
-            <td class="date-${getDateStatus(v.rampCraneInspection)}">${formatDate(v.rampCraneInspection)}</td>
-            <td class="date-${getDateStatus(v.winterInspection)}">${formatDate(v.winterInspection)}</td>
-            <td class="date-${getDateStatus(v.carrierLicenseSigned)}">${formatDate(v.carrierLicenseSigned)}</td>
+            <td class="date-${getDateStatus(v.licenseExpiry, 'licenseExpiry')}">${formatDate(v.licenseExpiry)}</td>
+            <td class="date-${getDateStatus(v.mandatoryInsurance, 'mandatoryInsurance')}">${formatDate(v.mandatoryInsurance)}</td>
+            <td class="date-${getDateStatus(v.calibrationExpiry, 'calibrationExpiry')}">${formatDate(v.calibrationExpiry)}</td>
+            <td class="date-${getDateStatus(v.brakeTestExpiry, 'brakeTestExpiry')}">${formatDate(v.brakeTestExpiry)}</td>
+            <td class="date-${getDateStatus(v.carrierLicense, 'carrierLicense')}">${formatDate(v.carrierLicense)}</td>
+            <td class="date-${getDateStatus(v.rampCraneInspection, 'rampCraneInspection')}">${formatDate(v.rampCraneInspection)}</td>
+            <td class="date-${getDateStatus(v.winterInspection, 'winterInspection')}">${formatDate(v.winterInspection)}</td>
+            <td class="date-${getDateStatus(v.carrierLicenseSigned, 'carrierLicenseSigned')}">${formatDate(v.carrierLicenseSigned)}</td>
             <td>${formatDate(v.inspectionDate)}</td>
             <td>${defCell}</td>
-            <td><button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button></td>
+            <td class="whitespace-nowrap">
+                <button onclick="event.stopPropagation();openViewModal('${v.licenseNumber}')" class="view-btn" title="צפייה בכרטיס">&#128065;</button>
+                <button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button>
+            </td>
         </tr>`;
     });
 
@@ -722,7 +862,7 @@ function renderWorkPage() {
         if (!rec.carrierLicenseSigned) {
             carrierLicenseSignedCell = `<td class="work-cell work-cell-empty text-center">-</td>`;
         } else {
-            const status = getDateStatus(rec.carrierLicenseSigned);
+            const status = getDateStatus(rec.carrierLicenseSigned, 'carrierLicenseSigned');
             const days = daysUntil(rec.carrierLicenseSigned);
             const daysText = days < 0 ? `פג ${Math.abs(days)}י'` : days === 0 ? 'פג היום' : `בעוד ${days}י'`;
             const cellClass = status === 'expired' ? 'work-cell-expired' : (status === 'critical' || status === 'warning') ? 'work-cell-warning' : 'work-cell-valid';
@@ -749,10 +889,7 @@ function renderWorkPage() {
         html += `<tr class="work-vehicle-row ${rowClass}">`;
         html += `<td class="text-center ${visitIconClass}">${visitIcon}</td>`;
         html += `<td class="font-semibold">${rec.customerName}</td>`;
-        html += `<td>
-            <div class="text-xs">${rec.contactName || '-'}</div>
-            ${rec.contactPhone ? `<div class="text-xs"><a href="tel:${rec.contactPhone}" class="text-blue-600">${rec.contactPhone}</a></div>` : ''}
-        </td>`;
+        html += `<td>${renderContactsInline(rec)}</td>`;
         html += `<td class="font-bold">${rec.licenseNumber}</td>`;
         html += `<td class="text-gray-500">${rec.vehicleType}</td>`;
         html += inspectionCell;
@@ -772,7 +909,9 @@ function renderWorkPage() {
             </button>
         </td>`;
 
-        html += `<td>
+        html += `<td class="whitespace-nowrap">
+            <button onclick="openViewModal('${rec.licenseNumber}')"
+                class="view-btn" title="צפייה בכרטיס">&#128065;</button>
             <button onclick="openEditModal('${rec.licenseNumber}')"
                 class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">
                 עדכן
@@ -828,18 +967,19 @@ function renderManagePage() {
             <td>${r.location}</td>
             <td>${r.licenseNumber}</td>
             <td>${r.vehicleType}</td>
-            <td class="date-${getDateStatus(r.licenseExpiry)}">${formatDate(r.licenseExpiry)}</td>
-            <td class="date-${getDateStatus(r.mandatoryInsurance)}">${formatDate(r.mandatoryInsurance)}</td>
-            <td class="date-${getDateStatus(r.calibrationExpiry)}">${formatDate(r.calibrationExpiry)}</td>
-            <td class="date-${getDateStatus(r.brakeTestExpiry)}">${formatDate(r.brakeTestExpiry)}</td>
-            <td class="date-${getDateStatus(r.carrierLicense)}">${formatDate(r.carrierLicense)}</td>
-            <td class="date-${getDateStatus(r.rampCraneInspection)}">${formatDate(r.rampCraneInspection)}</td>
-            <td class="date-${getDateStatus(r.winterInspection)}">${formatDate(r.winterInspection)}</td>
-            <td class="date-${getDateStatus(r.carrierLicenseSigned)}">${formatDate(r.carrierLicenseSigned)}</td>
+            <td class="date-${getDateStatus(r.licenseExpiry, 'licenseExpiry')}">${formatDate(r.licenseExpiry)}</td>
+            <td class="date-${getDateStatus(r.mandatoryInsurance, 'mandatoryInsurance')}">${formatDate(r.mandatoryInsurance)}</td>
+            <td class="date-${getDateStatus(r.calibrationExpiry, 'calibrationExpiry')}">${formatDate(r.calibrationExpiry)}</td>
+            <td class="date-${getDateStatus(r.brakeTestExpiry, 'brakeTestExpiry')}">${formatDate(r.brakeTestExpiry)}</td>
+            <td class="date-${getDateStatus(r.carrierLicense, 'carrierLicense')}">${formatDate(r.carrierLicense)}</td>
+            <td class="date-${getDateStatus(r.rampCraneInspection, 'rampCraneInspection')}">${formatDate(r.rampCraneInspection)}</td>
+            <td class="date-${getDateStatus(r.winterInspection, 'winterInspection')}">${formatDate(r.winterInspection)}</td>
+            <td class="date-${getDateStatus(r.carrierLicenseSigned, 'carrierLicenseSigned')}">${formatDate(r.carrierLicenseSigned)}</td>
             <td class="text-center">
                 ${defCount > 0 ? `<span class="badge status-expired">${defCount}</span>` : '<span class="text-gray-400">0</span>'}
             </td>
-            <td>
+            <td class="whitespace-nowrap">
+                <button onclick="openViewModal('${r.licenseNumber}')" class="view-btn" title="צפייה בכרטיס">&#128065;</button>
                 <button onclick="openEditModal('${r.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button>
                 <button onclick="confirmDelete('${r.licenseNumber}')" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm hover:bg-red-200">מחיקה</button>
             </td>
@@ -855,9 +995,95 @@ function renderManagePage() {
 // ============================================================
 
 let tempDeficiencies = [];
+let tempContacts = [];
 let editingLicenseNumber = '';
 let editingOldInspectionDate = '';
 let editingOldAppSynced = '';
+
+// ============================================================
+// Contacts editor (shared by add + edit forms)
+// ============================================================
+
+function contactsEditorHtml() {
+    return `<div id="contacts-editor">${tempContacts.map((c, i) => contactRowHtml(c, i)).join('')}</div>
+        <button type="button" onclick="addContactRow()" class="text-blue-600 text-base mt-1 py-2 hover:underline font-medium">+ הוסף איש קשר</button>`;
+}
+
+function contactRowHtml(contact, index) {
+    return `<div class="contact-row" data-idx="${index}">
+        <input type="text" value="${escapeText(contact.name || '')}" placeholder="שם איש קשר"
+            oninput="updateContactField(${index},'name',this.value)" class="contact-name">
+        <input type="tel" value="${escapeText(contact.phone || '')}" placeholder="טלפון" dir="ltr"
+            inputmode="tel" oninput="updateContactField(${index},'phone',this.value)" class="contact-phone">
+        <button type="button" onclick="removeContactRow(${index})" class="text-red-500 hover:text-red-700 text-2xl px-2" title="הסר">&times;</button>
+    </div>`;
+}
+
+function addContactRow() {
+    tempContacts.push({ name: '', phone: '' });
+    refreshContactsEditor();
+}
+
+function updateContactField(index, field, value) {
+    if (tempContacts[index]) tempContacts[index][field] = value;
+}
+
+function removeContactRow(index) {
+    tempContacts.splice(index, 1);
+    refreshContactsEditor();
+}
+
+function refreshContactsEditor() {
+    const c = document.getElementById('contacts-editor');
+    if (c) c.innerHTML = tempContacts.map((ct, i) => contactRowHtml(ct, i)).join('');
+}
+
+function collectContacts() {
+    return tempContacts
+        .map(c => ({ name: (c.name || '').trim(), phone: normalizePhone(c.phone) }))
+        .filter(c => c.name || c.phone);
+}
+
+// ============================================================
+// Custom field inputs (shared by add + edit forms)
+// ============================================================
+
+function customFieldsInputsHtml(record) {
+    const fields = getCustomFields();
+    if (!fields.length) return '';
+    const values = (record && record.customFields) || {};
+    let html = `<h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
+    fields.forEach(f => {
+        const name = 'cf_' + f.key;
+        const val = values[f.key] != null ? values[f.key] : '';
+        let input;
+        if (f.type === 'date') {
+            const status = getDateStatus(val, f.key);
+            const statusTag = val ? ` <span class="date-${status} text-xs">(${statusLabel(status)})</span>` : '';
+            input = `<label>${escapeText(f.label)}${statusTag}</label>${dateFieldHtml(name, val)}`;
+        } else if (f.type === 'select') {
+            const opts = (f.options || []).map(o =>
+                `<option value="${escapeText(o)}" ${o === val ? 'selected' : ''}>${escapeText(o)}</option>`).join('');
+            input = `<label>${escapeText(f.label)}</label><select name="${name}"><option value="">-</option>${opts}</select>`;
+        } else {
+            input = `<label>${escapeText(f.label)}</label><input type="text" name="${name}" value="${escapeText(val)}">`;
+        }
+        html += `<div class="modal-field">${input}</div>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+function collectCustomFields(form) {
+    const out = {};
+    getCustomFields().forEach(f => {
+        const el = form.elements['cf_' + f.key];
+        if (!el) return;
+        out[f.key] = f.type === 'date' ? parseDateInput(el.value) : el.value;
+    });
+    return out;
+}
 
 function openEditModal(licenseNumber) {
     const data = getData();
@@ -871,18 +1097,11 @@ function openEditModal(licenseNumber) {
 
     const defs = loadDeficiencies();
     tempDeficiencies = JSON.parse(JSON.stringify(defs[record.licenseNumber] || []));
+    tempContacts = getContacts(record).map(c => ({ name: c.name, phone: c.phone }));
+    if (!tempContacts.length) tempContacts = [{ name: '', phone: '' }];
 
-    const dateFieldEntries = [
-        ['licenseExpiry', 'תוקף רישוי'],
-        ['mandatoryInsurance', 'ביטוח חובה'],
-        ['calibrationExpiry', 'כיול'],
-        ['brakeTestExpiry', 'אישור בלמים חצי שנתי'],
-        ['carrierLicense', 'רשיון מוביל'],
-        ['rampCraneInspection', 'תסקיר רמפה/מנוף'],
-        ['winterInspection', 'בדיקת חורף'],
-        ['carrierLicenseSigned', 'נחתם רישיון מוביל עד'],
-        ['inspectionDate', 'תאריך בדיקה']
-    ];
+    const dateFieldEntries = DATE_FIELDS.map(f => [f, fieldLabel(f)])
+        .concat([['inspectionDate', 'תאריך בדיקה']]);
 
     let html = `<form id="edit-form" onsubmit="handleSaveEdit(event)">
         <input type="hidden" name="originalLicense" value="${record.licenseNumber}">
@@ -936,20 +1155,21 @@ function openEditModal(licenseNumber) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
 
     dateFieldEntries.forEach(([field, label]) => {
-        const status = getDateStatus(record[field]);
+        const status = getDateStatus(record[field], field);
         const statusClass = field !== 'inspectionDate' ? `date-${status}` : '';
-        const displayVal = record[field] ? formatDate(record[field]) : '';
         html += `<div class="modal-field">
-            <label>${label} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
+            <label>${escapeText(label)} <span class="${statusClass} text-xs">${field !== 'inspectionDate' && record[field] ? '(' + statusLabel(status) + ')' : ''}</span></label>
             ${dateFieldHtml(field, record[field])}
         </div>`;
     });
 
     html += `</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-            <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName" value="${record.contactName}"></div>
-            <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone" value="${record.contactPhone}"></div>
-        </div>
+
+        ${customFieldsInputsHtml(record)}
+
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
+        <div class="modal-field"><label>כתובת</label><input type="text" name="address" value="${escapeText(record.address || '')}" placeholder="כתובת הלקוח / מוסך"></div>
+        ${contactsEditorHtml()}
 
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
         <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב...">${(record.notes || '').replace(/</g, '&lt;')}</textarea></div>
@@ -1027,11 +1247,16 @@ async function handleSaveEdit(event) {
         winterInspection: parseDateInput(form.elements.winterInspection.value),
         carrierLicenseSigned: parseDateInput(form.elements.carrierLicenseSigned.value),
         inspectionDate: parseDateInput(form.elements.inspectionDate.value),
-        contactName: form.elements.contactName.value,
-        contactPhone: form.elements.contactPhone.value,
+        address: form.elements.address ? form.elements.address.value : '',
+        contacts: collectContacts(),
         notes: form.elements.notes ? form.elements.notes.value : '',
+        customFields: collectCustomFields(form),
         appSynced: parseDateInput(form.elements.inspectionDate.value) !== editingOldInspectionDate ? 'no' : editingOldAppSynced
     };
+
+    // Keep legacy single-contact columns in sync with the first contact
+    record.contactName = record.contacts[0] ? record.contacts[0].name : '';
+    record.contactPhone = record.contacts[0] ? record.contacts[0].phone : '';
 
     const success = await saveRecord(record);
     if (success) {
@@ -1044,6 +1269,92 @@ async function handleSaveEdit(event) {
 
 function closeModal() {
     document.getElementById('edit-modal').classList.add('hidden');
+}
+
+// ============================================================
+// View Modal (read-only card)
+// ============================================================
+
+function openViewModal(licenseNumber) {
+    const data = getData();
+    const record = data.find(r => r.licenseNumber === licenseNumber || r.id === licenseNumber);
+    if (!record) return;
+
+    document.getElementById('modal-title').textContent = `כרטיס רכב: ${record.licenseNumber} - ${record.customerName}`;
+
+    const row = (label, value) => `<div class="view-field"><span class="view-label">${escapeText(label)}</span><span class="view-value">${value || '<span class="text-gray-400">-</span>'}</span></div>`;
+
+    const dateRow = (field, label) => {
+        const val = getDateFieldValue(record, field);
+        if (!val) return row(label, '');
+        const status = getDateStatus(val, field);
+        return `<div class="view-field"><span class="view-label">${escapeText(label)}</span>
+            <span class="view-value date-${status}">${formatDate(val)} <span class="text-xs">(${statusLabel(status)})</span></span></div>`;
+    };
+
+    const hazmat = record.hazmatCertified === 'yes' ? 'כן' : record.hazmatCertified === 'no' ? 'לא' : '';
+
+    let html = `<div class="view-card">
+        <div class="view-section-title">פרטים כלליים</div>
+        ${row('שם לקוח', escapeText(record.customerName))}
+        ${row('מיקום', escapeText(record.location))}
+        ${row('מספר רישוי', escapeText(record.licenseNumber))}
+        ${row('סוג רכב', escapeText(record.vehicleType))}
+
+        <div class="view-section-title">פרטי רכב</div>
+        ${row('יצרן רכב', escapeText(record.manufacturer))}
+        ${row('משקל כולל', escapeText(record.totalWeight))}
+        ${row('מספר ק״מ', escapeText(record.mileage))}
+        ${row('מורשה חומ״ס', hazmat)}
+
+        <div class="view-section-title">תאריכי תוקף</div>
+        ${DATE_FIELDS.map(f => dateRow(f, fieldLabel(f))).join('')}
+        ${row('תאריך בדיקה אחרון', record.inspectionDate ? formatDate(record.inspectionDate) : '')}`;
+
+    const customFields = getCustomFields();
+    if (customFields.length) {
+        html += `<div class="view-section-title">שדות נוספים</div>`;
+        customFields.forEach(f => {
+            if (f.type === 'date') html += dateRow(f.key, f.label);
+            else html += row(f.label, escapeText((record.customFields || {})[f.key] || ''));
+        });
+    }
+
+    html += `<div class="view-section-title">איש קשר</div>
+        ${row('כתובת', escapeText(record.address))}`;
+    const contacts = getContacts(record);
+    if (contacts.length) {
+        contacts.forEach(c => {
+            const phone = c.phone ? `<a href="tel:${c.phone}" class="text-blue-600">${escapeText(c.phone)}</a>` : '';
+            html += row(c.name || 'איש קשר', phone);
+        });
+    } else {
+        html += row('אנשי קשר', '');
+    }
+
+    if ((record.notes || '').trim()) {
+        html += `<div class="view-section-title">הערות</div>
+            <div class="view-notes">${escapeText(record.notes).replace(/\n/g, '<br>')}</div>`;
+    }
+
+    const recDefs = (loadDeficiencies()[record.licenseNumber] || []);
+    if (recDefs.length) {
+        const defLabel = { open: 'פתוח', 'in-progress': 'בטיפול', resolved: 'טופל' };
+        html += `<div class="view-section-title">ליקויים</div>`;
+        recDefs.forEach(d => {
+            html += `<div class="view-field"><span class="view-value">${escapeText(d.description)}</span>
+                <span class="badge deficiency-${d.status} view-def-badge">${defLabel[d.status] || d.status}</span></div>`;
+        });
+    }
+
+    html += `</div>
+        <div class="flex gap-3 mt-4 pt-3 border-t">
+            <button type="button" onclick="openEditModal('${record.licenseNumber}')" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-base">עריכה</button>
+            <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">סגור</button>
+        </div>`;
+
+    document.getElementById('modal-content').innerHTML = html;
+    document.getElementById('edit-modal').classList.remove('hidden');
 }
 
 async function toggleAppSync(licenseNumber) {
@@ -1119,6 +1430,9 @@ function selectCustomer(name, location) {
 function showAddForm() {
     document.getElementById('modal-title').textContent = 'הוספת רשומה חדשה';
     tempDeficiencies = [];
+    tempContacts = [{ name: '', phone: '' }];
+
+    const addDateFields = DATE_FIELDS.map(f => [f, fieldLabel(f)]).concat([['inspectionDate', 'תאריך בדיקה']]);
 
     let html = `<form id="add-form" onsubmit="handleAddRecord(event)">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1142,20 +1456,14 @@ function showAddForm() {
         </div>
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">תאריכי תוקף</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="modal-field"><label>תוקף רישוי</label>${dateFieldHtml('licenseExpiry', '')}</div>
-            <div class="modal-field"><label>ביטוח חובה</label>${dateFieldHtml('mandatoryInsurance', '')}</div>
-            <div class="modal-field"><label>כיול</label>${dateFieldHtml('calibrationExpiry', '')}</div>
-            <div class="modal-field"><label>אישור בלמים חצי שנתי</label>${dateFieldHtml('brakeTestExpiry', '')}</div>
-            <div class="modal-field"><label>רשיון מוביל</label>${dateFieldHtml('carrierLicense', '')}</div>
-            <div class="modal-field"><label>תסקיר רמפה/מנוף</label>${dateFieldHtml('rampCraneInspection', '')}</div>
-            <div class="modal-field"><label>בדיקת חורף</label>${dateFieldHtml('winterInspection', '')}</div>
-            <div class="modal-field"><label>נחתם רישיון מוביל עד</label>${dateFieldHtml('carrierLicenseSigned', '')}</div>
-            <div class="modal-field"><label>תאריך בדיקה</label>${dateFieldHtml('inspectionDate', '')}</div>
+            ${addDateFields.map(([f, label]) => `<div class="modal-field"><label>${escapeText(label)}</label>${dateFieldHtml(f, '')}</div>`).join('')}
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-            <div class="modal-field"><label>איש קשר</label><input type="text" name="contactName"></div>
-            <div class="modal-field"><label>טלפון</label><input type="text" name="contactPhone"></div>
-        </div>
+
+        ${customFieldsInputsHtml(null)}
+
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">איש קשר</h4>
+        <div class="modal-field"><label>כתובת</label><input type="text" name="address" placeholder="כתובת הלקוח / מוסך"></div>
+        ${contactsEditorHtml()}
         <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">הערות</h4>
         <div class="modal-field"><textarea name="notes" rows="5" style="min-height:120px;resize:vertical" placeholder="הערות חופשיות לרכב..."></textarea></div>
         <div class="flex gap-3 mt-4 pt-3 border-t">
@@ -1176,11 +1484,16 @@ async function handleAddRecord(event) {
      'calibrationExpiry', 'brakeTestExpiry', 'carrierLicense', 'rampCraneInspection', 'winterInspection', 'carrierLicenseSigned', 'inspectionDate'];
     ['customerName', 'location', 'licenseNumber', 'vehicleType',
      'manufacturer', 'totalWeight', 'mileage', 'hazmatCertified',
-     ...dateFields, 'contactName', 'contactPhone', 'notes'
+     ...dateFields, 'address', 'notes'
     ].forEach(f => {
         const val = form.elements[f]?.value || '';
         record[f] = dateFields.includes(f) ? parseDateInput(val) : val;
     });
+
+    record.contacts = collectContacts();
+    record.contactName = record.contacts[0] ? record.contacts[0].name : '';
+    record.contactPhone = record.contacts[0] ? record.contacts[0].phone : '';
+    record.customFields = collectCustomFields(form);
 
     const success = await addNewRecord(record);
     if (success) {
@@ -1214,17 +1527,18 @@ function exportData() {
 
     const headers = ['שם לקוח', 'מיקום', 'רישוי', 'סוג רכב', 'יצרן', 'משקל כולל', 'ק״מ', 'חומ״ס',
         'תוקף רישוי', 'ביטוח חובה', 'כיול', 'בלמים ח״ש', 'מוביל', 'רמפה/מנוף', 'חורף', 'נחתם מוביל',
-        'בדיקה', 'איש קשר', 'טלפון', 'ליקויים פתוחים', 'הערות'];
+        'בדיקה', 'כתובת', 'אנשי קשר', 'ליקויים פתוחים', 'הערות'];
 
     const rows = data.map(r => {
         const openDefs = (deficiencies[r.licenseNumber] || []).filter(d => d.status !== 'resolved').length;
         const notesCsv = (r.notes || '').replace(/"/g, '""').replace(/\r?\n/g, ' ');
+        const contactsCsv = getContacts(r).map(c => `${c.name}${c.phone ? ' ' + c.phone : ''}`).join(' | ');
         return [r.customerName, r.location, r.licenseNumber, r.vehicleType,
             r.manufacturer || '', r.totalWeight || '', r.mileage || '', r.hazmatCertified || '',
             r.licenseExpiry, r.mandatoryInsurance,
             r.calibrationExpiry, r.brakeTestExpiry,
             r.carrierLicense, r.rampCraneInspection || '', r.winterInspection || '', r.carrierLicenseSigned || '',
-            r.inspectionDate, r.contactName, r.contactPhone, openDefs, notesCsv
+            r.inspectionDate, r.address || '', contactsCsv, openDefs, notesCsv
         ].map(v => `"${v}"`).join(',');
     });
 
@@ -1251,10 +1565,32 @@ async function refreshData() {
 }
 
 // ============================================================
-// Settings - API URL
+// Settings hub (gear icon) — connection + card template editor
 // ============================================================
 
 function showSettings() {
+    document.getElementById('modal-title').textContent = 'הגדרות';
+    const html = `<div class="settings-hub">
+        <button type="button" onclick="showConnectionSettings()" class="settings-hub-btn">
+            <div class="settings-hub-icon">&#128279;</div>
+            <div>
+                <div class="settings-hub-title">הגדרות חיבור</div>
+                <div class="settings-hub-desc">כתובת ה-Google Apps Script</div>
+            </div>
+        </button>
+        <button type="button" onclick="showTemplateEditor()" class="settings-hub-btn">
+            <div class="settings-hub-icon">&#128203;</div>
+            <div>
+                <div class="settings-hub-title">עריכת תבנית כרטיס רכב</div>
+                <div class="settings-hub-desc">שמות שדות, שדות נוספים וזמני התראה (פג תוקף)</div>
+            </div>
+        </button>
+    </div>`;
+    document.getElementById('modal-content').innerHTML = html;
+    document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function showConnectionSettings() {
     document.getElementById('modal-title').textContent = 'הגדרות חיבור';
     const currentUrl = APPS_SCRIPT_URL || '';
 
@@ -1293,10 +1629,145 @@ async function saveSettings(event) {
 }
 
 // ============================================================
+// Card Template Editor
+// ============================================================
+
+let tempConfig = null;
+
+function showTemplateEditor() {
+    tempConfig = normalizeConfig(JSON.parse(JSON.stringify(_config)));
+    document.getElementById('modal-title').textContent = 'עריכת תבנית כרטיס רכב';
+    renderTemplateEditor();
+    document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function renderTemplateEditor() {
+    const builtinRows = DATE_FIELDS.map(f => {
+        const label = tempConfig.labels[f] != null ? tempConfig.labels[f] : '';
+        const days = tempConfig.expiryDays[f] != null ? tempConfig.expiryDays[f] : DEFAULT_EXPIRY_DAYS;
+        return `<div class="tpl-row">
+            <input type="text" value="${escapeText(label)}" placeholder="${escapeText(DEFAULT_FIELD_LABELS[f])}"
+                oninput="tplSetLabel('${f}', this.value)" class="tpl-label">
+            <div class="tpl-days">
+                <input type="number" min="0" value="${days}" oninput="tplSetDays('${f}', this.value)">
+                <span>ימים</span>
+            </div>
+        </div>`;
+    }).join('');
+
+    const customRows = tempConfig.customFields.length
+        ? tempConfig.customFields.map((cf, i) => customFieldEditorRow(cf, i)).join('')
+        : '<div class="text-xs text-gray-400 mb-2">אין שדות נוספים. ניתן להוסיף שדה חדש למטה.</div>';
+
+    const html = `
+        <p class="text-xs text-gray-500 mb-3">שינוי שמות שדות, הגדרת מספר הימים לפני שתאריך נחשב כ"פג תוקף" (התראה), והוספת שדות חדשים לכרטיס הרכב.</p>
+
+        <h4 class="font-bold text-sm mt-2 mb-2 text-gray-700 border-b pb-1">שדות תאריך קיימים</h4>
+        <div class="tpl-head"><span>שם השדה</span><span>התראה לפני (ימים)</span></div>
+        ${builtinRows}
+
+        <h4 class="font-bold text-sm mt-4 mb-2 text-gray-700 border-b pb-1">שדות נוספים</h4>
+        <div id="tpl-custom-list">${customRows}</div>
+        <button type="button" onclick="tplAddCustomField()" class="text-blue-600 text-base mt-1 py-2 hover:underline font-medium">+ הוסף שדה</button>
+
+        <div class="flex gap-3 mt-4 pt-3 border-t">
+            <button type="button" onclick="saveTemplateEditor()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-base">שמור תבנית</button>
+            <button type="button" onclick="showSettings()" class="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 font-medium text-base">חזרה</button>
+        </div>`;
+    document.getElementById('modal-content').innerHTML = html;
+}
+
+function customFieldEditorRow(cf, i) {
+    const isDate = cf.type === 'date';
+    const isSelect = cf.type === 'select';
+    return `<div class="tpl-custom-row">
+        <div class="tpl-custom-main">
+            <input type="text" value="${escapeText(cf.label || '')}" placeholder="שם השדה"
+                oninput="tplSetCustom(${i},'label',this.value)" class="tpl-label">
+            <select onchange="tplSetCustomType(${i}, this.value)">
+                <option value="text" ${cf.type === 'text' ? 'selected' : ''}>טקסט</option>
+                <option value="date" ${isDate ? 'selected' : ''}>תאריך</option>
+                <option value="select" ${isSelect ? 'selected' : ''}>בחירה מרשימה</option>
+            </select>
+            <button type="button" onclick="tplRemoveCustom(${i})" class="text-red-500 hover:text-red-700 text-2xl px-2" title="הסר">&times;</button>
+        </div>
+        ${isDate ? `<div class="tpl-days"><input type="number" min="0" value="${cf.expiryDays != null ? cf.expiryDays : DEFAULT_EXPIRY_DAYS}" oninput="tplSetCustom(${i},'expiryDays',this.value)"><span>ימים להתראה</span></div>` : ''}
+        ${isSelect ? `<input type="text" value="${escapeText((cf.options || []).join(', '))}" placeholder="ערכים מופרדים בפסיק" oninput="tplSetCustomOptions(${i}, this.value)" class="tpl-options">` : ''}
+    </div>`;
+}
+
+function tplSetLabel(field, value) {
+    if (value && value.trim()) tempConfig.labels[field] = value.trim();
+    else delete tempConfig.labels[field];
+}
+
+function tplSetDays(field, value) {
+    const n = parseInt(value, 10);
+    tempConfig.expiryDays[field] = isNaN(n) || n < 0 ? DEFAULT_EXPIRY_DAYS : n;
+}
+
+function tplSetCustom(i, field, value) {
+    if (!tempConfig.customFields[i]) return;
+    if (field === 'expiryDays') {
+        const n = parseInt(value, 10);
+        tempConfig.customFields[i].expiryDays = isNaN(n) || n < 0 ? DEFAULT_EXPIRY_DAYS : n;
+    } else {
+        tempConfig.customFields[i][field] = value;
+    }
+}
+
+function tplSetCustomType(i, type) {
+    if (!tempConfig.customFields[i]) return;
+    tempConfig.customFields[i].type = type;
+    if (type === 'select' && !Array.isArray(tempConfig.customFields[i].options)) {
+        tempConfig.customFields[i].options = [];
+    }
+    if (type === 'date' && tempConfig.customFields[i].expiryDays == null) {
+        tempConfig.customFields[i].expiryDays = DEFAULT_EXPIRY_DAYS;
+    }
+    renderTemplateEditor();
+}
+
+function tplSetCustomOptions(i, value) {
+    if (!tempConfig.customFields[i]) return;
+    tempConfig.customFields[i].options = value.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function tplAddCustomField() {
+    const key = 'cf_' + Date.now().toString(36) + Math.floor(Math.random() * 1000);
+    tempConfig.customFields.push({ key, label: '', type: 'text', expiryDays: DEFAULT_EXPIRY_DAYS, options: [] });
+    renderTemplateEditor();
+}
+
+function tplRemoveCustom(i) {
+    tempConfig.customFields.splice(i, 1);
+    renderTemplateEditor();
+}
+
+async function saveTemplateEditor() {
+    // Drop custom fields without a label; ensure every field has a stable key
+    tempConfig.customFields = tempConfig.customFields
+        .filter(cf => cf.label && cf.label.trim())
+        .map(cf => {
+            cf.label = cf.label.trim();
+            if (!cf.key) cf.key = 'cf_' + Date.now().toString(36) + Math.floor(Math.random() * 1000);
+            if (cf.type !== 'select') delete cf.options;
+            if (cf.type !== 'date') delete cf.expiryDays;
+            return cf;
+        });
+
+    await saveConfig(tempConfig);
+    closeModal();
+    populateFilters();
+    renderCurrentPage();
+}
+
+// ============================================================
 // Initialize
 // ============================================================
 
 async function init() {
+    loadConfigFromCache();
     // Check if API URL is configured
     if (!APPS_SCRIPT_URL) {
         showStatus('לא מוגדר חיבור', true);

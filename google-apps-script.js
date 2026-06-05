@@ -5,6 +5,7 @@
 
 const SHEET_NAME = 'להדפסה';
 const DEF_SHEET_NAME = 'ליקויים';
+const CONFIG_SHEET_NAME = 'הגדרות';
 
 // ============================================================
 // Migration: Run this ONCE to update sheet columns
@@ -77,6 +78,29 @@ function migrateColumns3() {
   Logger.log('Migration 3 complete! Added notes column at col ' + (COLS.notes + 1));
 }
 
+// Adds: address, contacts (JSON), customFields (JSON)
+function migrateColumns4() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { Logger.log('Sheet not found: ' + SHEET_NAME); return; }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  if (headers.includes('כתובת')) {
+    Logger.log('Migration 4 already applied. Skipping.');
+    return;
+  }
+
+  const newHeaders = ['כתובת', 'אנשי קשר', 'שדות נוספים'];
+  sheet.getRange(1, COLS.address + 1, 1, newHeaders.length).setValues([newHeaders]);
+  // Keep phone / JSON columns as plain text so leading zeros are preserved
+  sheet.getRange(2, COLS.contactPhone + 1, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  sheet.getRange(2, COLS.contacts + 1, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  sheet.getRange(2, COLS.customFields + 1, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  Logger.log('Migration 4 complete! Added address, contacts, customFields columns.');
+}
+
 // Column mapping (0-based index)
 const COLS = {
   customerName: 0,
@@ -99,7 +123,10 @@ const COLS = {
   hazmatCertified: 17,
   winterInspection: 18,
   carrierLicenseSigned: 19,
-  notes: 20
+  notes: 20,
+  address: 21,
+  contacts: 22,
+  customFields: 23
 };
 
 // ============================================================
@@ -129,6 +156,12 @@ function doGet(e) {
     }
     if (action === 'getDeficiencies') {
       return jsonResponse(getAllDeficiencies());
+    }
+    if (action === 'getConfig') {
+      return jsonResponse(getConfig());
+    }
+    if (action === 'saveConfig') {
+      return jsonResponse(saveConfig(e.parameter.data));
     }
 
     // Write operations via GET (to avoid CORS issues with POST)
@@ -227,11 +260,24 @@ function getAllVehicles() {
       hazmatCertified: String(row[COLS.hazmatCertified] || ''),
       winterInspection: formatDateValue(row[COLS.winterInspection]),
       carrierLicenseSigned: formatDateValue(row[COLS.carrierLicenseSigned]),
-      notes: String(row[COLS.notes] || '')
+      notes: String(row[COLS.notes] || ''),
+      address: String(row[COLS.address] || ''),
+      contacts: parseJsonField(row[COLS.contacts], []),
+      customFields: parseJsonField(row[COLS.customFields], {})
     });
   }
 
   return { status: 'ok', data: records };
+}
+
+function parseJsonField(val, fallback) {
+  if (val === null || val === undefined || val === '') return fallback;
+  try {
+    const parsed = JSON.parse(String(val));
+    return parsed === null ? fallback : parsed;
+  } catch (err) {
+    return fallback;
+  }
 }
 
 // ============================================================
@@ -271,12 +317,24 @@ function updateVehicle(record) {
     record.hazmatCertified || '',
     parseDateString(record.winterInspection),
     parseDateString(record.carrierLicenseSigned),
-    record.notes || ''
+    record.notes || '',
+    record.address || '',
+    JSON.stringify(record.contacts || []),
+    JSON.stringify(record.customFields || {})
   ];
 
+  // Force phone + JSON columns to plain text so leading zeros survive
+  setTextColumns(sheet, rowIndex);
   sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
 
   return { status: 'ok', message: 'Updated' };
+}
+
+// Keep phone & JSON columns as text so Sheets does not strip leading zeros
+function setTextColumns(sheet, rowIndex) {
+  sheet.getRange(rowIndex, COLS.contactPhone + 1).setNumberFormat('@');
+  sheet.getRange(rowIndex, COLS.contacts + 1).setNumberFormat('@');
+  sheet.getRange(rowIndex, COLS.customFields + 1).setNumberFormat('@');
 }
 
 function updateAppSync(licenseNumber, value) {
@@ -317,10 +375,17 @@ function addVehicle(record) {
     record.hazmatCertified || '',
     parseDateString(record.winterInspection),
     parseDateString(record.carrierLicenseSigned),
-    record.notes || ''
+    record.notes || '',
+    record.address || '',
+    JSON.stringify(record.contacts || []),
+    JSON.stringify(record.customFields || {})
   ];
 
   sheet.appendRow(rowData);
+  const newRow = sheet.getLastRow();
+  setTextColumns(sheet, newRow);
+  // Re-write phone as text so a leading zero is not stripped by appendRow
+  sheet.getRange(newRow, COLS.contactPhone + 1).setValue(record.contactPhone || '');
 
   return { status: 'ok', message: 'Added' };
 }
@@ -413,6 +478,41 @@ function saveDeficiency(licenseNumber, deficiencies) {
   }
 
   return { status: 'ok', message: 'Deficiencies saved' };
+}
+
+// ============================================================
+// Card Template Configuration (stored as JSON in a config sheet)
+// ============================================================
+
+function getConfig() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  if (!sheet) {
+    return { status: 'ok', config: null };
+  }
+  const raw = sheet.getRange(1, 1).getValue();
+  if (!raw) return { status: 'ok', config: null };
+  try {
+    return { status: 'ok', config: JSON.parse(String(raw)) };
+  } catch (err) {
+    return { status: 'ok', config: null };
+  }
+}
+
+function saveConfig(jsonStr) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG_SHEET_NAME);
+  }
+  // Validate JSON before storing
+  try {
+    JSON.parse(jsonStr);
+  } catch (err) {
+    return { error: 'Invalid config JSON: ' + err.message };
+  }
+  sheet.getRange(1, 1).setNumberFormat('@').setValue(jsonStr);
+  return { status: 'ok', message: 'Config saved' };
 }
 
 // ============================================================
