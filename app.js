@@ -97,6 +97,8 @@ function getDateFieldValue(record, field) {
 function normalizePhone(phone) {
     let p = String(phone == null ? '' : phone).trim();
     if (!p) return '';
+    // Strip separators (hyphens, spaces, parentheses, dots) — show digits only
+    p = p.replace(/[\s\-().]/g, '');
     // Recover a leading zero stripped by spreadsheet number formatting
     if (/^\d+$/.test(p) && !p.startsWith('0') && (p.length === 8 || p.length === 9)) {
         p = '0' + p;
