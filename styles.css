@@ -482,6 +482,38 @@
     overflow-y: auto;
 }
 
+/* Matched action button pair (work page: צפייה / עדכן) */
+.act-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 40px;
+    min-width: 92px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    vertical-align: middle;
+    transition: background-color 0.15s;
+    white-space: nowrap;
+}
+.act-btn + .act-btn { margin-inline-start: 6px; }
+.act-btn .act-icon { font-size: 1rem; line-height: 1; }
+.act-btn-view {
+    background-color: #eef2ff;
+    color: #3730a3;
+    border-color: #c7d2fe;
+}
+.act-btn-view:hover { background-color: #e0e7ff; }
+.act-btn-edit {
+    background-color: #2563eb;
+    color: #fff;
+}
+.act-btn-edit:hover { background-color: #1d4ed8; }
+
 /* View (eye) button */
 .view-btn {
     background-color: #e0e7ff;

@@ -603,10 +603,11 @@ function renderDashboard() {
     const byCustomer = {};
     filtered.forEach(r => {
         if (!byCustomer[r.customerName]) {
+            const primary = getContacts(r)[0] || { name: '', phone: '' };
             byCustomer[r.customerName] = {
                 location: r.location,
-                contact: r.contactName,
-                phone: r.contactPhone,
+                contact: primary.name,
+                phone: primary.phone,
                 vehicles: []
             };
         }
@@ -675,7 +676,7 @@ function toggleCustomerExpand(row, customerName) {
         <th>רישוי</th><th>סוג</th><th>יצרן</th><th>משקל</th><th>ק״מ</th><th>חומ״ס</th>
         <th>תוקף רישוי</th><th>ביטוח חובה</th>
         <th>כיול</th><th>בלמים ח״ש</th>
-        <th>מוביל</th><th>רמפה/מנוף</th><th>חורף</th><th>נחתם מוביל</th><th>בדיקה</th><th>ליקויים</th><th>פעולות</th>
+        <th>מוביל</th><th>רמפה/מנוף</th><th>חורף</th><th>נחתם מוביל</th><th>בדיקה</th><th>ליקויים</th><th>צפייה</th>
     </tr></thead><tbody>`;
 
     data.forEach(v => {
@@ -698,9 +699,8 @@ function toggleCustomerExpand(row, customerName) {
             <td class="date-${getDateStatus(v.carrierLicenseSigned, 'carrierLicenseSigned')}">${formatDate(v.carrierLicenseSigned)}</td>
             <td>${formatDate(v.inspectionDate)}</td>
             <td>${defCell}</td>
-            <td class="whitespace-nowrap">
+            <td class="text-center">
                 <button onclick="event.stopPropagation();openViewModal('${v.licenseNumber}')" class="view-btn" title="צפייה בכרטיס">&#128065;</button>
-                <button onclick="event.stopPropagation();openEditModal('${v.licenseNumber}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700">עריכה</button>
             </td>
         </tr>`;
     });
@@ -909,12 +909,12 @@ function renderWorkPage() {
             </button>
         </td>`;
 
-        html += `<td class="whitespace-nowrap">
-            <button onclick="openViewModal('${rec.licenseNumber}')"
-                class="view-btn" title="צפייה בכרטיס">&#128065;</button>
-            <button onclick="openEditModal('${rec.licenseNumber}')"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">
-                עדכן
+        html += `<td class="whitespace-nowrap text-center">
+            <button onclick="openViewModal('${rec.licenseNumber}')" class="act-btn act-btn-view" title="צפייה בכרטיס">
+                <span class="act-icon">&#128065;</span><span>צפייה</span>
+            </button>
+            <button onclick="openEditModal('${rec.licenseNumber}')" class="act-btn act-btn-edit">
+                <span class="act-icon">&#9998;</span><span>עדכן</span>
             </button>
         </td></tr>`;
     });
